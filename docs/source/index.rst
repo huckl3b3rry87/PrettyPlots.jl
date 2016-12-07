@@ -3,20 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to PrettyPlots's documentation!
-=======================================
+PrettyPlots.jl
+=============
 
-Contents:
-
-.. toctree::
-   :maxdepth: 2
+This project uses `Plots.jl <https://github.com/tbreloff/Plots.jl>`_ to develop some custom plotting functionality for use with `VehicleModels.jl <https://github.com/huckl3b3rry87/VehicleModels.jl>`_
 
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+Currently, there is no documentation!
