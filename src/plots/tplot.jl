@@ -21,13 +21,13 @@ for j in 1:num
 	T_total =  sum(T_solve[j,:]);
 	t_e = dfs[j][:t][end]
 
-	plot!(T_solve[j,:],w=4,label=string(label_string[j], " opt. times"))
+	plot!(T_solve[j,2:end],w=4,label=string(label_string[j], " opt. times"))
 	str1 = string(label_string[j], @sprintf(" total solve time  = %0.2f", T_total), " s");
 	annotate!([(  maximum(xlims())/2, (maximum(ylims())*1.8 + (j-1)*2), text(str1,16,:black,:center)  )])
 	str2 = string(label_string[j], @sprintf(" total sim. time = %0.2f", t_e), " s");
 	annotate!([(  maximum(xlims())/2, (maximum(ylims())*1.4 + (j-1)*2), text(str2,16,:black,:center)  )])
 end
-plot!(1:length(T_solve[1,:]),0.5*ones(length(T_solve[1,:]),1), w=4, leg=:true,label="real-time threshhold",leg=:right,size=(s,s))
+plot!(1:length(T_solve[1,2:end]),0.5*ones(length(T_solve[1,2:end]),1), w=4, leg=:true,label="real-time threshhold",leg=:right,size=(s,s))
 
 ylims!((0,maximum(ylims())*2.1))
 yaxis!("Optimization Time (s)")

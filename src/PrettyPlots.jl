@@ -7,11 +7,11 @@ using Plots
 using DataFrames
 using VehicleModels
 using ImplicitEquations  # to plot obstacles
-
+using NLOptControl
 #dirty
 ############
 # includes #
-############
+############TODO consider consolidating! TODO make an option for black?
 
 # data functionality
 include("data/x_to_DataFrame.jl")
@@ -22,6 +22,8 @@ include("data/max_DF.jl")#TODO might remove
 include("data/min_DF.jl")#TODO might remove
 
 # plotting functionality
+include("NLOptControl_plots.jl")
+
 include("plots/adjust_axis.jl")
 include("plots/all_plots.jl")
 include("plots/anim_funs.jl")
@@ -60,16 +62,14 @@ export
     all_plots, panim_fun, axplot, jxplot, latvplot, longvplot, ltplot, pplot,
     saplot, srplot, tplot, vtplot, yawplot, optplot,
 
-    bar2
+    statePlot, controlPlot, allPlots,
+
+    resultsDir
 # Macros
 
 #############################
 # types/functions/constants #
 #############################
-function bar2(x)
-  println("in bar $x")
-  return x
-end
 
 
 # abstract types #
