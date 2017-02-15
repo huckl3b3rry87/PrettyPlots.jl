@@ -3,11 +3,11 @@ function adjust_axis(x_lim,y_lim, args...)
 	if length(args) < 4    # use default scaling factors
 	  #  print("Using default scaling factors in adjust_axis.jl \n")
 		# scaling factors
-		al_x = [0.0, 0.05]; # x axis (low, high)
-		al_y = [0.0, 0.0];  # y axis (low, high)
+		al_x = [0.05, 0.05]; # x axis (low, high)
+		al_y = [0.05, 0.05];  # y axis (low, high)
 		# additional axis movement - useful for case where data is at zero or user wants a fixed shift
-		hl_x = [-0.12, 0.0]; # x axis (low, high)
-		hl_y = [-1.0, 1.0];  # y axis (low, high)
+		hl_x = [-0.1, 0.1]; # x axis (low, high)
+		hl_y = [-0.1, 0.1];  # y axis (low, high)
 	else
 	#	print("Not using default scaling factors in adjust_axis.jl \n")
 	end

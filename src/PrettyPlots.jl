@@ -62,6 +62,11 @@ export
     all_plots, panim_fun, axplot, jxplot, latvplot, longvplot, ltplot, pplot,
     saplot, srplot, tplot, vtplot, yawplot, optplot,
 
+    ########################
+    # NLOptControl.jl plots
+    ########################
+
+    # general plots
     statePlot, controlPlot, allPlots,
 
     resultsDir
