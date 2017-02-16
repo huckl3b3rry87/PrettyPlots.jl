@@ -3,7 +3,7 @@
 # plotting functionality for NLOptControl.jl
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 2/10/2017, Last Modified: 2/10/2017 \n
+Date Create: 2/10/2017, Last Modified: 2/14/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function allPlots(n::NLOpt,r::Result,s::Settings,idx::Int64)
