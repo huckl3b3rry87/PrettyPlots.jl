@@ -1,17 +1,15 @@
 module PrettyPlots
-# plotting options
-#TODO make these global s = 700; global w1 = 7; global w2 = 4;
-# global results_folder
+
 using Media
 using Plots
 using DataFrames
 using VehicleModels
-using ImplicitEquations  # to plot obstacles
+using ImplicitEquations
 using NLOptControl
-#dirty
+
 ############
 # includes #
-############TODO consider consolidating! TODO make an option for black?
+############
 
 # data functionality
 include("data/x_to_DataFrame.jl")
