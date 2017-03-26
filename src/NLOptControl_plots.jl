@@ -37,7 +37,7 @@ stp=statePlot(n,r,s,idx,st;(:legend=>"test1"));
 stp=statePlot(n,r,s,idx,st,stp;(:append=>true));
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 2/10/2017, Last Modified: 3/11/2017 \n
+Date Create: 2/10/2017, Last Modified: 3/26/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function statePlot(n::NLOpt,r::Result,s::Settings,idx::Int64,st::Int64,args...;kwargs...)
@@ -65,14 +65,19 @@ function statePlot(n::NLOpt,r::Result,s::Settings,idx::Int64,st::Int64,args...;k
 		t_vec=linspace(r.dfs_plant[1][:t][1],max(5,round(r.dfs_plant[end][:t][end]/5)*5),s.L);
 	end
 
-  # plot the limits
   if lims
-		if n.linearStateTol[st]
+		# plot the lower limits
+		if n.mXL[st]!=false
 			if !isinf(n.XL[st]);plot!(r.t_st,n.XL_var[st,:],w=s.lw1,label=string(legend_string,"min"));end
-    	if !isinf(n.XU[st]);plot!(r.t_st,n.XU_var[st,:],w=s.lw1,label=string(legend_string,"max"));end
 		else
     	if !isinf(n.XL[st]);plot!(t_vec,n.XL[st]*ones(s.L,1),w=s.lw1,label=string(legend_string,"min"));end
-    	if !isinf(n.XU[st]);plot!(t_vec,n.XU[st]*ones(s.L,1),w=s.lw1,label=string(legend_string,"max"));end
+		end
+
+		# plot the upper limits
+		if n.mXU[st]!=false
+			if !isinf(n.XU[st]);plot!(r.t_st,n.XU_var[st,:],w=s.lw1,label=string(legend_string,"max"));end
+		else
+			if !isinf(n.XU[st]);plot!(t_vec,n.XU[st]*ones(s.L,1),w=s.lw1,label=string(legend_string,"max"));end
 		end
   end
 
@@ -130,6 +135,7 @@ function statePlot(n::NLOpt,r::Result,s::Settings,idx::Int64,st1::Int64,st2::Int
 
   # plot the limits
   # TODO check if all constraints are given
+	# TODO make it work for linear varying stateTol
   if lims
     if !isinf(n.XL[st1]);plot!([n.XL[st1],n.XL[st1]],[n.XL[st2],n.XU[st2]],w=s.lw1,label=string(n.state.name[st1],"_min"));end
     if !isinf(n.XU[st1]);plot!([n.XU[st1],n.XU[st1]],[n.XL[st2],n.XU[st2]],w=s.lw1,label=string(n.state.name[st1],"_max"));end
@@ -228,14 +234,14 @@ end
 function adjust_axis(x_lim,y_lim)
 
 	# scaling factors
-	al_x = [0.05, 0.05]; # x axis (low, high)
+	al_x = [0.05, 0.05];  # x axis (low, high)
 	al_y = [0.05, 0.05];  # y axis (low, high)
 
 	# additional axis movement
 	if x_lim[1]==0.0; a=-1; else a=0; end
-	if x_lim[2]==0.0; b=1;  else b=0; end
+	if x_lim[2]==0.0; b=1; else b=0; end
 	if y_lim[1]==0.0; c=-0.01; else c=0; end
-	if y_lim[2]==0.0; d=1;  else d=0; end
+	if y_lim[2]==0.0; d=1; else d=0; end
 
 	xlim = Float64[0,0]; ylim = Float64[0,0];
 	xlim[1] = x_lim[1]+x_lim[1]*al_x[1]+a;
