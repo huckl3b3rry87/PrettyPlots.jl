@@ -10,7 +10,7 @@ include("NLOptControl_plots.jl")
 
 export
     # basic functions
-    resultsDir, adjust_axis,
+    adjust_axis,
 
     # NLOptControl.jl plots
     statePlot, controlPlot, allPlots
