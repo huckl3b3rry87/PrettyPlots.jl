@@ -198,7 +198,7 @@ function controlPlot(n::NLOpt,r::Result,s::Settings,idx::Int64,ctr::Int64,args..
 	end
   if s.MPC
 		# values
-		temp = [r.dfs_plant[jj][n.state.name[st]] for jj in 1:idx];
+		temp = [r.dfs_plant[jj][n.control.name[ctr]] for jj in 1:idx];
 	  vals=[idx for tempM in temp for idx=tempM];
 
 		# time
