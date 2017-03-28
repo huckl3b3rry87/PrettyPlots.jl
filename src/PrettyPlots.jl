@@ -1,18 +1,25 @@
 module PrettyPlots
 
-using Plots
-using DataFrames
-using VehicleModels
-using NLOptControl
-
-# plotting functionality
 include("NLOptControl_plots.jl")
+include("VehicleModels_plots.jl")
+
+using .NLOptControl_plots
+using .VehicleModels_plots
 
 export
-    # basic functions
-    adjust_axis,
 
     # NLOptControl.jl plots
-    statePlot, controlPlot, allPlots
+    statePlot,
+    controlPlot,
+    allPlots,
+    adjust_axis,
+    tPlot,
+
+    # OCP.jl & VehicleModel.jl plots
+    obstaclePlot,
+    vehiclePlot,
+    vtPlot,
+    axLimsPlot,
+    mainSim
 
 end # module
