@@ -12,14 +12,16 @@ export
       vehiclePlot,
       vtPlot,
       axLimsPlot,
-      mainSim
+      mainSim,
+      mainSimPath,
+      pSimPath
 
 """
 pp=obstaclePlot(n,r,s,c,idx);
 pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true));
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 3/11/2017, Last Modified: 3/17/2017 \n
+Date Create: 3/11/2017, Last Modified: 3/29/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
@@ -32,37 +34,39 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
   if !append; pp=plot(0,leg=:false); else pp=args[1]; end
 
   # plot the goal; assuming same in x and y
-  if isnan(n.XF_tol[1]); rg=1; else rg=n.XF_tol[1]; end
-  pts = Plots.partialcircle(0,2π,100,rg);
-  x, y = Plots.unzip(pts);
-  x += c.x_ref;  y += c.y_ref;
-  pts = collect(zip(x, y));
-  plot!(pts, fill = (0, 0.7, :green),leg=true,label="Goal")
-  #plot!(Shape(x,y),c=:green,label="Goal")
+  if !isempty(c.g.name)
+    if isnan(n.XF_tol[1]); rg=1; else rg=n.XF_tol[1]; end[]
+    pts = Plots.partialcircle(0,2π,100,rg);
+    x, y = Plots.unzip(pts);
+    x += c.g.x_ref;  y += c.g.y_ref;
+    pts = collect(zip(x, y));
+    plot!(pts, fill = (0, 0.7, :green),leg=true,label="Goal")
+  end
 
-  for i in 1:length(c.A)
-    # create an ellipse
-    pts = Plots.partialcircle(0,2π,100,c.A[i])
-    x, y = Plots.unzip(pts)
-    if s.MPC
-      x += c.X0_obs[i] + c.s_x[i]*r.dfs_plant[idx][:t][end];
-      y = c.B[i]/c.A[i]*y + c.Y0_obs[i] + c.s_y[i]*r.dfs_plant[idx][:t][end];
-    else
-      x += c.X0_obs[i] + c.s_x[i]*r.dfs[idx][:t][end];
-      y = c.B[i]/c.A[i]*y + c.Y0_obs[i] + c.s_y[i]*r.dfs[idx][:t][end];
-    end
-    pts = collect(zip(x, y))
-    if i==1
-      plot!(pts, fill = (0, 0.7, :red),leg=true,label="Obstacles",leg=:bottomleft)
-    #  plot!(Shape(x,y), c=:red,leg=true,label="Obstacles",leg=:bottomleft)
-    else
-      plot!(pts, fill = (0, 0.7, :red),leg=true,label="",leg=:bottomleft)
-    #  plot!(Shape(x,y), c=:red,leg=true,label= "",leg=true,leg=:bottomleft)
+  if !isempty(c.o.A)
+    for i in 1:length(c.o.A)
+      # create an ellipse
+      pts = Plots.partialcircle(0,2π,100,c.o.A[i])
+      x, y = Plots.unzip(pts)
+      if s.MPC
+        x += c.o.X0[i] + c.o.s_x[i]*r.dfs_plant[idx][:t][end];
+        y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*r.dfs_plant[idx][:t][end];
+      else
+        x += c.o.X0[i] + c.o.s_x[i]*r.dfs[idx][:t][end];
+        y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*r.dfs[idx][:t][end];
+      end
+      pts = collect(zip(x, y))
+      if i==1
+        plot!(pts, fill = (0, 0.7, :red),leg=true,label="Obstacles",leg=:bottomleft)
+      else
+        plot!(pts, fill = (0, 0.7, :red),leg=true,label="",leg=:bottomleft)
+      end
     end
   end
+
   xaxis!(n.state.description[1]);
   yaxis!(n.state.description[2]);
-  xlims!(100,250);ylims!(0,150); #TODO pass this based off of obstacle feild
+  xlims!(-50,50);ylims!(0,100); #TODO pass this based off of obstacle feild
   if !s.simulate savefig(string(r.results_dir,"/",n.state.name[1],"_vs_",n.state.name[2],".",s.format)); end
   return pp
 end
@@ -239,6 +243,87 @@ function mainSim(n,r,s,c,pa,idx)
   annotate!(166,90,text(string(@sprintf("Obj. Val: %0.2f", r.obj_val[idx])),16,:red,:center))
 
   return mainS
+end
+
+
+"""
+mainS=mainSimPath(n,r,s,c,pa,idx)
+--------------------------------------------------------------------------------------\n
+Author: Huckleberry Febbo, Graduate Student, University of Michigan
+Date Create: 3/28/2017, Last Modified: 3/28/2017 \n
+--------------------------------------------------------------------------------------\n
+"""
+function mainSimPath(n,r,s,c,pa,idx)
+  sap=controlPlot(n,r,s,idx,1)
+
+  vp=statePlot(n,r,s,idx,3)
+  rp=statePlot(n,r,s,idx,4)
+  #psip=statePlot(n,r,s,idx,5)
+  pp=trackPlot(r,s,c,idx)
+  pp=statePlot(n,r,s,idx,1,2,pp;(:lims=>false),(:append=>true));
+  pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true)); # add obstacles
+  pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true)); # add the vehicle
+  tp=tPlot(n,r,s,idx)
+  vt=vtPlot(n,r,s,pa,idx)
+  l = @layout [a{0.3w} [grid(2,2)
+                        b{0.2h}]]
+  mainS=plot(pp,sap,vt,rp,vp,tp,layout=l,size=(1800,1200));
+  annotate!(166,105,text(string(@sprintf("Final Time:  %0.2f", r.dfs_plant[idx][:t][end])," s"),16,:red,:center))
+  annotate!(166,100,text(string("Iteration # ", idx),16,:red,:center))
+  annotate!(166,95,text(string(r.status[idx]," | ", n.solver),16,:red,:center))
+  annotate!(166,90,text(string(@sprintf("Obj. Val: %0.2f", r.obj_val[idx])),16,:red,:center))
+
+  return mainS
+end
+
+"""
+pp=pSimPath(n,r,s,c,idx)
+--------------------------------------------------------------------------------------\n
+Author: Huckleberry Febbo, Graduate Student, University of Michigan
+Date Create: 3/28/2017, Last Modified: 3/28/2017 \n
+--------------------------------------------------------------------------------------\n
+"""
+function pSimPath(n,r,s,c,idx)
+  pp=trackPlot(r,s,c,idx)
+  pp=statePlot(n,r,s,idx,1,2,pp;(:lims=>false),(:append=>true));
+  pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true)); # add obstacles
+  pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true)); # add the vehicle
+
+  if !s.simulate savefig(string(r.results_dir,"pp.",s.format)) end
+  return pp
+end
+
+"""
+
+pp=trackPlot(r,s,c,idx);
+pp=trackPlot(r,s,c,idx,pp;(:append=>true));
+--------------------------------------------------------------------------------------\n
+Author: Huckleberry Febbo, Graduate Student, University of Michigan
+Date Create: 3/28/2017, Last Modified: 3/28/2017 \n
+--------------------------------------------------------------------------------------\n
+"""
+function trackPlot(r,s,c,idx,args...;kwargs...)
+  kw = Dict(kwargs);
+
+  # check to see if user would like to add to an existing plot
+  if !haskey(kw,:append); kw_ = Dict(:append => false); append = get(kw_,:append,0);
+  else; append = get(kw,:append,0);
+  end
+  if !append; pp=plot(0,leg=:false); else pp=args[1]; end
+
+  f(y)=c.t.a0 + c.t.a1*y + c.t.a2*y^2 + c.t.a3*y^3 + c.t.a4*y^4;
+  if s.MPC
+    #temp = [r.dfs_plant[jj][:y] for jj in 1:idx]; # Y
+    temp = [r.dfs_plant[jj][:y] for jj in 1:r.eval_num]; # Y
+    Y=[idx for tempM in temp for idx=tempM];
+  else
+    Y=r.X[:,2];
+  end
+
+  X=f.(Y);
+
+  plot!(X,Y,w=s.lw1*5,label="Road")
+  return pp
 end
 
 end # module

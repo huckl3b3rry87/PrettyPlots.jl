@@ -253,13 +253,15 @@ end
 tp=tPlot(n,r,s,idx)
 tp=tPlot(n,r,s,idx,tp;(:append=>true))
 # plot the optimization times
-# this is more of an MPC plot
+# this is an MPC plot 
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 3/11/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function tPlot(n::NLOpt,r::Result,s::Settings,idx::Int64,args...;kwargs...);
+  if !s.MPC; error("\n This plot is for MPC \n"); end
+
   kw = Dict(kwargs);
   # check to see if user would like to add to an existing plot
   if !haskey(kw,:append); kw_ = Dict(:append => false); append = get(kw_,:append,0);

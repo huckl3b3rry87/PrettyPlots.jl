@@ -20,6 +20,8 @@ export
     vehiclePlot,
     vtPlot,
     axLimsPlot,
-    mainSim
+    mainSim,
+    mainSimPath,
+    pSimPath
 
 end # module
