@@ -57,16 +57,22 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
       end
       pts = collect(zip(x, y))
       if i==1
-        plot!(pts, fill = (0, 0.7, :red),leg=true,label="Obstacles",leg=:bottomleft)
+        plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="Obstacles",leg=:bottomleft)
       else
-        plot!(pts, fill = (0, 0.7, :red),leg=true,label="",leg=:bottomleft)
+        plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="",leg=:bottomleft)
       end
     end
   end
 
   xaxis!(n.state.description[1]);
   yaxis!(n.state.description[2]);
-  xlims!(-50,50);ylims!(0,100); #TODO pass this based off of obstacle feild
+  if s.MPC
+    xlims!(minDF(r.dfs_plant,:x),maxDF(r.dfs_plant,:x));
+    ylims!(minDF(r.dfs_plant,:y),maxDF(r.dfs_plant,:y));
+  else
+    xlims!(minDF(r.dfs,:x),maxDF(r.dfs,:x));
+    ylims!(minDF(r.dfs,:y),maxDF(r.dfs,:y));
+  end
   if !s.simulate savefig(string(r.results_dir,"/",n.state.name[1],"_vs_",n.state.name[2],".",s.format)); end
   return pp
 end
@@ -116,13 +122,13 @@ function vehiclePlot(n,r,s,c,idx,args...;kwargs...)
   return pp
 end
 """
-vt=vtPlot(n,r,s,pa,idx)
+vt=vtPlot(n,r,s,pa,c,idx)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 3/11/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function vtPlot(n::NLOpt,r::Result,s::Settings,pa::VehicleModels.Vpara,idx::Int64)
+function vtPlot(n::NLOpt,r::Result,s::Settings,pa::VehicleModels.Vpara,c,idx::Int64)
 	@unpack_Vpara pa
 
   if !s.MPC && r.dfs[idx]!=nothing
@@ -134,7 +140,12 @@ function vtPlot(n::NLOpt,r::Result,s::Settings,pa::VehicleModels.Vpara,idx::Int6
 	vt=plot(t_vec,Fz_min*ones(s.L,1),line=(s.lw2),label="min")
 
   if r.dfs[idx]!=nothing
-    V=r.dfs[idx][:v];U=r.dfs[idx][:ux];Ax=r.dfs[idx][:ax];R=r.dfs[idx][:r];SA=r.dfs[idx][:sa];
+    V=r.dfs[idx][:v];R=r.dfs[idx][:r];SA=r.dfs[idx][:sa];
+    if c.m.model!=:ThreeDOFv1
+      Ax=r.dfs[idx][:ax]; U=r.dfs[idx][:ux];
+    else # constain speed (the model is not optimizing speed)
+      U=c.m.UX*ones(length(V)); Ax=zeros(length(V));
+    end
     plot!(r.dfs[idx][:t],@FZ_RL(),w=s.lw1,label="RL-mpc");
     plot!(r.dfs[idx][:t],@FZ_RR(),w=s.lw1,label="RR-mpc");
   end
@@ -142,11 +153,15 @@ function vtPlot(n::NLOpt,r::Result,s::Settings,pa::VehicleModels.Vpara,idx::Int6
     temp = [r.dfs_plant[jj][:v] for jj in 1:idx]; # V
     V=[idx for tempM in temp for idx=tempM];
 
-    temp = [r.dfs_plant[jj][:ux] for jj in 1:idx]; # ux
-    U=[idx for tempM in temp for idx=tempM];
+    if c.m.model!=:ThreeDOFv1
+      temp = [r.dfs_plant[jj][:ux] for jj in 1:idx]; # ux
+      U=[idx for tempM in temp for idx=tempM];
 
-    temp = [r.dfs_plant[jj][:ax] for jj in 1:idx]; # ax
-    Ax=[idx for tempM in temp for idx=tempM];
+      temp = [r.dfs_plant[jj][:ax] for jj in 1:idx]; # ax
+      Ax=[idx for tempM in temp for idx=tempM];
+    else # constain speed ( the model is not optimizing speed)
+      U=c.m.UX*ones(length(V)); Ax=zeros(length(V));
+    end
 
     temp = [r.dfs_plant[jj][:r] for jj in 1:idx]; # r
     R=[idx for tempM in temp for idx=tempM];
@@ -233,15 +248,10 @@ function mainSim(n,r,s,c,pa,idx)
   pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true)); # add obstacles
   pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true)); # add the vehicle
   tp=tPlot(n,r,s,idx)
-  vt=vtPlot(n,r,s,pa,idx)
+  vt=vtPlot(n,r,s,pa,c,idx)
   l = @layout [a{0.3w} [grid(2,2)
                         b{0.2h}]]
   mainS=plot(pp,sap,vt,longv,axp,tp,layout=l,size=(1800,1200));
-  annotate!(166,105,text(string(@sprintf("Final Time:  %0.2f", r.dfs_plant[idx][:t][end])," s"),16,:red,:center))
-  annotate!(166,100,text(string("Iteration # ", idx),16,:red,:center))
-  annotate!(166,95,text(string(r.status[idx]," | ", n.solver),16,:red,:center))
-  annotate!(166,90,text(string(@sprintf("Obj. Val: %0.2f", r.obj_val[idx])),16,:red,:center))
-
   return mainS
 end
 
@@ -254,24 +264,19 @@ Date Create: 3/28/2017, Last Modified: 3/28/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function mainSimPath(n,r,s,c,pa,idx)
-  sap=controlPlot(n,r,s,idx,1)
-
+  if c.m.model==:ThreeDOFv1
+    sap=controlPlot(n,r,s,idx,1)
+  elseif c.m.model==:ThreeDOFv2
+    sap=statePlot(n,r,s,idx,6)
+  end
   vp=statePlot(n,r,s,idx,3)
   rp=statePlot(n,r,s,idx,4)
-  #psip=statePlot(n,r,s,idx,5)
-  pp=trackPlot(r,s,c,idx)
-  pp=statePlot(n,r,s,idx,1,2,pp;(:lims=>false),(:append=>true));
-  pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true)); # add obstacles
-  pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true)); # add the vehicle
+  vt=vtPlot(n,r,s,pa,c,idx)
+  pp=pSimPath(n,r,s,c,idx)
   tp=tPlot(n,r,s,idx)
-  vt=vtPlot(n,r,s,pa,idx)
   l = @layout [a{0.3w} [grid(2,2)
                         b{0.2h}]]
   mainS=plot(pp,sap,vt,rp,vp,tp,layout=l,size=(1800,1200));
-  annotate!(166,105,text(string(@sprintf("Final Time:  %0.2f", r.dfs_plant[idx][:t][end])," s"),16,:red,:center))
-  annotate!(166,100,text(string("Iteration # ", idx),16,:red,:center))
-  annotate!(166,95,text(string(r.status[idx]," | ", n.solver),16,:red,:center))
-  annotate!(166,90,text(string(@sprintf("Obj. Val: %0.2f", r.obj_val[idx])),16,:red,:center))
 
   return mainS
 end
@@ -286,9 +291,8 @@ Date Create: 3/28/2017, Last Modified: 3/28/2017 \n
 function pSimPath(n,r,s,c,idx)
   pp=trackPlot(r,s,c,idx)
   pp=statePlot(n,r,s,idx,1,2,pp;(:lims=>false),(:append=>true));
-  pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true)); # add obstacles
-  pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true)); # add the vehicle
-
+  pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true)); # obstacles
+  pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true));  # vehicle
   if !s.simulate savefig(string(r.results_dir,"pp.",s.format)) end
   return pp
 end
@@ -312,17 +316,15 @@ function trackPlot(r,s,c,idx,args...;kwargs...)
   if !append; pp=plot(0,leg=:false); else pp=args[1]; end
 
   f(y)=c.t.a0 + c.t.a1*y + c.t.a2*y^2 + c.t.a3*y^3 + c.t.a4*y^4;
-  if s.MPC
-    #temp = [r.dfs_plant[jj][:y] for jj in 1:idx]; # Y
-    temp = [r.dfs_plant[jj][:y] for jj in 1:r.eval_num]; # Y
-    Y=[idx for tempM in temp for idx=tempM];
+
+  if s.MPC && r.eval_num > 2
+    Y= r.dfs_plant[1][:y][1]:0.1:r.dfs[r.eval_num][:y][end];
   else
     Y=r.X[:,2];
   end
-
   X=f.(Y);
 
-  plot!(X,Y,w=s.lw1*5,label="Road")
+  plot!(X,Y,label="Road",line=(s.lw1*2,:solid,:black))
   return pp
 end
 

@@ -253,7 +253,7 @@ end
 tp=tPlot(n,r,s,idx)
 tp=tPlot(n,r,s,idx,tp;(:append=>true))
 # plot the optimization times
-# this is an MPC plot 
+# this is an MPC plot
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 3/11/2017 \n
@@ -287,11 +287,10 @@ function tPlot(n::NLOpt,r::Result,s::Settings,idx::Int64,args...;kwargs...);
 	t_e = r.dfs_plant[idx][:t][end];         # final simulation time for vehicle
 
   scatter!(1:L-1,T_solve[2:L],markershape = :square, markercolor = :black, markersize = s.ms2,label=string(legend_string," opt. times"))
-	#plot!(X,T_solve,w=s.lw1,label=string(legend_string," opt. times"))
-	str1 = string(legend_string, @sprintf(" total solve time  = %0.2f", T_total), " s");
-	annotate!([(  maximum(xlims())/2, (maximum(ylims())*1.8 + (idx-1)*2), text(str1,16,:black,:center)  )])
-	str2 = string(legend_string, @sprintf(" total sim. time = %0.2f", t_e), " s");
-	annotate!([(  maximum(xlims())/2, (maximum(ylims())*1.4 + (idx-1)*2), text(str2,16,:black,:center)  )])
+#	str1 = string(legend_string, @sprintf(" total solve time  = %0.2f", T_total), " s");
+	#annotate!([(  maximum(xlims())/2, (maximum(ylims())*1.8 + (idx-1)*2), text(str1,16,:black,:center)  )])
+	#str2 = string(legend_string, @sprintf(" total sim. time = %0.2f", t_e), " s");
+	#annotate!([(  maximum(xlims())/2, (maximum(ylims())*1.4 + (idx-1)*2), text(str2,16,:black,:center)  )])
 	plot!(1:length(T_solve),n.mpc.tex*ones(length(T_solve)), w=s.lw1, leg=:true,label="real-time threshhold",leg=:topright)
 
 	ylims!((ylims()[1],maximum(ylims())*2.1))

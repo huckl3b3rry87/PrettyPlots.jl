@@ -1,12 +1,17 @@
 module PrettyPlots
 
+#include("utils.jl")
 include("NLOptControl_plots.jl")
 include("VehicleModels_plots.jl")
 
+#using .utils
 using .NLOptControl_plots
 using .VehicleModels_plots
 
 export
+    # utils.jl
+    minDF,
+    maxDF,
 
     # NLOptControl.jl plots
     statePlot,
