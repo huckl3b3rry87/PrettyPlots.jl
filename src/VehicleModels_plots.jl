@@ -17,8 +17,16 @@ export
       pSimPath
 
 """
+# to visualize the current obstacle in the field
+obstaclePlot(n,c)
+
+# to run it after a single optimization
 pp=obstaclePlot(n,r,s,c,1);
+
+# to create a new plot
 pp=obstaclePlot(n,r,s,c,idx);
+
+# to add to an exsting position plot
 pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true));
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
@@ -28,61 +36,89 @@ Date Create: 3/11/2017, Last Modified: 4/3/2017 \n
 function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
   kw = Dict(kwargs);
 
-  # check to see if user would like to add to an existing plot
-  if !haskey(kw,:append); kw_ = Dict(:append => false); append = get(kw_,:append,0);
-  else; append = get(kw,:append,0);
-  end
-  if !append; pp=plot(0,leg=:false); else pp=args[1]; end
-
-  # plot the goal; assuming same in x and y
-  if !isempty(c.g.name)
-    if isnan(n.XF_tol[1]); rg=1; else rg=n.XF_tol[1]; end[]
-    pts = Plots.partialcircle(0,2π,100,rg);
-    x, y = Plots.unzip(pts);
-    x += c.g.x_ref;  y += c.g.y_ref;
-    pts = collect(zip(x, y));
-    plot!(pts, fill = (0, 0.7, :green),leg=true,label="Goal")
+  # check to see if is a basic plot
+  if !haskey(kw,:basic); kw_ = Dict(:basic => false); basic = get(kw_,:basic,0);
+  else; basic=get(kw,:basic,0);
   end
 
-  if !isempty(c.o.A)
-    for i in 1:length(c.o.A)
-      # create an ellipse
-      pts = Plots.partialcircle(0,2π,100,c.o.A[i])
-      x, y = Plots.unzip(pts)
-      if s.MPC
-        x += c.o.X0[i] + c.o.s_x[i]*r.dfs_plant[idx][:t][end];
-        y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*r.dfs_plant[idx][:t][end];
-      else
-        if r.dfs[idx]!=nothing
-          tc=r.dfs[idx][:t][end];
-        else
+  if basic
+    s=Settings();
+    pp=plot(0,leg=:false)
+    if !isempty(c.o.A)
+      for i in 1:length(c.o.A)
+          # create an ellipse
+          pts = Plots.partialcircle(0,2π,100,c.o.A[i])
+          x, y = Plots.unzip(pts)
           tc=0;
-          warn("\n Obstacles set to inital condition for current frame!! \n")
-        end
-        x += c.o.X0[i] + c.o.s_x[i]*tc;
-        y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*tc;
-      end
-      pts = collect(zip(x, y))
-      if i==1
-        plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="Obstacles",leg=:bottomleft)
-      else
-        plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="",leg=:bottomleft)
+          x += c.o.X0[i] + c.o.s_x[i]*tc;
+          y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*tc;
+          pts = collect(zip(x, y))
+
+          if i==1
+            plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="Obstacles",leg=:bottomleft)
+          else
+            plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="",leg=:bottomleft)
+          end
       end
     end
-  end
-
-  xaxis!(n.state.description[1]);
-  yaxis!(n.state.description[2]);
-  if s.MPC
-    xlims!(minDF(r.dfs_plant,:x),maxDF(r.dfs_plant,:x));
-    ylims!(minDF(r.dfs_plant,:y),maxDF(r.dfs_plant,:y));
   else
-    xlims!(minDF(r.dfs,:x),maxDF(r.dfs,:x));
-    ylims!(minDF(r.dfs,:y),maxDF(r.dfs,:y));
+    # check to see if user would like to add to an existing plot
+    if !haskey(kw,:append); kw_ = Dict(:append => false); append = get(kw_,:append,0);
+    else; append = get(kw,:append,0);
+    end
+    if !append; pp=plot(0,leg=:false); else pp=args[1]; end
+
+    # plot the goal; assuming same in x and y
+    if c.g.name!=:NA
+      if isnan(n.XF_tol[1]); rg=1; else rg=n.XF_tol[1]; end[]
+      pts = Plots.partialcircle(0,2π,100,rg);
+      x, y = Plots.unzip(pts);
+      x += c.g.x_ref;  y += c.g.y_ref;
+      pts = collect(zip(x, y));
+      plot!(pts, fill = (0, 0.7, :green),leg=true,label="Goal")
+    end
+
+    if c.o.name!=:NA
+      for i in 1:length(c.o.A)
+        # create an ellipse
+        pts = Plots.partialcircle(0,2π,100,c.o.A[i])
+        x, y = Plots.unzip(pts)
+        if s.MPC
+          x += c.o.X0[i] + c.o.s_x[i]*r.dfs_plant[idx][:t][end];
+          y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*r.dfs_plant[idx][:t][end];
+        else
+          if r.dfs[idx]!=nothing
+            tc=r.dfs[idx][:t][end];
+          else
+            tc=0;
+            warn("\n Obstacles set to inital condition for current frame!! \n")
+          end
+          x += c.o.X0[i] + c.o.s_x[i]*tc;
+          y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*tc;
+        end
+        pts = collect(zip(x, y))
+        if i==1
+          plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="Obstacles",leg=:bottomleft)
+        else
+          plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="",leg=:bottomleft)
+        end
+      end
+    end
+
+    xaxis!(n.state.description[1]);
+    yaxis!(n.state.description[2]);
+    if s.MPC
+      xlims!(minDF(r.dfs_plant,:x),maxDF(r.dfs_plant,:x));
+      ylims!(minDF(r.dfs_plant,:y),maxDF(r.dfs_plant,:y));
+    else
+      xlims!(minDF(r.dfs,:x),maxDF(r.dfs,:x));
+      ylims!(minDF(r.dfs,:y),maxDF(r.dfs,:y));
+    end
+    if !s.simulate savefig(string(r.results_dir,"/",n.state.name[1],"_vs_",n.state.name[2],".",s.format)); end
   end
-  if !s.simulate savefig(string(r.results_dir,"/",n.state.name[1],"_vs_",n.state.name[2],".",s.format)); end
   return pp
 end
+obstaclePlot(n,c)=obstaclePlot(n,1,1,c,1,;(:basic=>true))
 
 """
 pp=vehiclePlot(n,r,s,c,idx);
