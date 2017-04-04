@@ -17,11 +17,12 @@ export
       pSimPath
 
 """
+pp=obstaclePlot(n,r,s,c,1);
 pp=obstaclePlot(n,r,s,c,idx);
 pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true));
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 3/11/2017, Last Modified: 3/29/2017 \n
+Date Create: 3/11/2017, Last Modified: 4/3/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
@@ -52,8 +53,14 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
         x += c.o.X0[i] + c.o.s_x[i]*r.dfs_plant[idx][:t][end];
         y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*r.dfs_plant[idx][:t][end];
       else
-        x += c.o.X0[i] + c.o.s_x[i]*r.dfs[idx][:t][end];
-        y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*r.dfs[idx][:t][end];
+        if r.dfs[idx]!=nothing
+          tc=r.dfs[idx][:t][end];
+        else
+          tc=0;
+          warn("\n Obstacles set to inital condition for current frame!! \n")
+        end
+        x += c.o.X0[i] + c.o.s_x[i]*tc;
+        y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*tc;
       end
       pts = collect(zip(x, y))
       if i==1
@@ -132,9 +139,9 @@ function vtPlot(n::NLOpt,r::Result,s::Settings,pa::VehicleModels.Vpara,c,idx::In
 	@unpack_Vpara pa
 
   if !s.MPC && r.dfs[idx]!=nothing
-  	t_vec=linspace(r.dfs[1][:t][1],round(r.dfs[end][:t][end]/10)*10,s.L);
+  	t_vec=linspace(0,round(r.dfs[end][:t][end]/10)*10,s.L);
 	else
-    t_vec=linspace(r.dfs_plant[1][:t][1],max(5,round(r.dfs_plant[end][:t][end]/5)*5),s.L);
+    t_vec=linspace(0,max(5,round(r.dfs_plant[end][:t][end]/5)*5),s.L);
 	end
 
 	vt=plot(t_vec,Fz_min*ones(s.L,1),line=(s.lw2),label="min")
@@ -204,9 +211,9 @@ function axLimsPlot(n::NLOpt,r::Result,s::Settings,pa::VehicleModels.Vpara,idx::
   @unpack_Vpara pa
 
   if !s.MPC && r.dfs[idx]!=nothing
-    t_vec=linspace(r.dfs[1][:t][1],max(5,round(r.dfs[end][:t][end]/5)*5),s.L);
+    t_vec=linspace(0,max(5,round(r.dfs[end][:t][end]/5)*5),s.L);
 	else
-    t_vec=linspace(r.dfs_plant[1][:t][1],max(5,round(r.dfs_plant[end][:t][end]/5)*5),s.L);
+    t_vec=linspace(0,max(5,round(r.dfs_plant[end][:t][end]/5)*5),s.L);
 	end
 
   if r.dfs[idx]!=nothing
@@ -247,7 +254,7 @@ function mainSim(n,r,s,c,pa,idx)
   pp=statePlot(n,r,s,idx,1,2;(:lims=>false));
   pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true)); # add obstacles
   pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true)); # add the vehicle
-  tp=tPlot(n,r,s,idx)
+  if s.MPC; tp=tPlot(n,r,s,idx); else; tp=plot(0,leg=:false); end
   vt=vtPlot(n,r,s,pa,c,idx)
   l = @layout [a{0.3w} [grid(2,2)
                         b{0.2h}]]
@@ -257,6 +264,7 @@ end
 
 
 """
+mainS=mainSimPath(n,r,s,c,pa,r.eval_num)
 mainS=mainSimPath(n,r,s,c,pa,idx)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
@@ -273,7 +281,7 @@ function mainSimPath(n,r,s,c,pa,idx)
   rp=statePlot(n,r,s,idx,4)
   vt=vtPlot(n,r,s,pa,c,idx)
   pp=pSimPath(n,r,s,c,idx)
-  tp=tPlot(n,r,s,idx)
+  if s.MPC; tp=tPlot(n,r,s,idx); else; tp=plot(0,leg=:false); end
   l = @layout [a{0.3w} [grid(2,2)
                         b{0.2h}]]
   mainS=plot(pp,sap,vt,rp,vp,tp,layout=l,size=(1800,1200));
@@ -282,28 +290,12 @@ function mainSimPath(n,r,s,c,pa,idx)
 end
 
 """
-pp=pSimPath(n,r,s,c,idx)
---------------------------------------------------------------------------------------\n
-Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 3/28/2017, Last Modified: 3/28/2017 \n
---------------------------------------------------------------------------------------\n
-"""
-function pSimPath(n,r,s,c,idx)
-  pp=trackPlot(r,s,c,idx)
-  pp=statePlot(n,r,s,idx,1,2,pp;(:lims=>false),(:append=>true));
-  pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true)); # obstacles
-  pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true));  # vehicle
-  if !s.simulate savefig(string(r.results_dir,"pp.",s.format)) end
-  return pp
-end
-
-"""
 
 pp=trackPlot(r,s,c,idx);
 pp=trackPlot(r,s,c,idx,pp;(:append=>true));
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 3/28/2017, Last Modified: 3/28/2017 \n
+Date Create: 3/28/2017, Last Modified: 4/3/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function trackPlot(r,s,c,idx,args...;kwargs...)
@@ -315,16 +307,74 @@ function trackPlot(r,s,c,idx,args...;kwargs...)
   end
   if !append; pp=plot(0,leg=:false); else pp=args[1]; end
 
-  f(y)=c.t.a0 + c.t.a1*y + c.t.a2*y^2 + c.t.a3*y^3 + c.t.a4*y^4;
-
-  if s.MPC && r.eval_num > 2
-    Y= r.dfs_plant[1][:y][1]:0.1:r.dfs[r.eval_num][:y][end];
-  else
-    Y=r.X[:,2];
+  if c.t.func==:poly
+    f(y)=c.t.a[1] + c.t.a[2]*y + c.t.a[3]*y^2 + c.t.a[4]*y^3 + c.t.a[5]*y^4;
+    Y=c.t.Y;
+    X=f.(Y);
+  elseif c.t.func==:fourier
+    ff(x)=c.t.a[1]*sin(c.t.b[1]*x+c.t.c[1]) + c.t.a[2]*sin(c.t.b[2]*x+c.t.c[2]) + c.t.a[3]*sin(c.t.b[3]*x+c.t.c[3]) + c.t.a[4]*sin(c.t.b[4]*x+c.t.c[4]) + c.t.a[5]*sin(c.t.b[5]*x+c.t.c[5]) + c.t.a[6]*sin(c.t.b[6]*x+c.t.c[6]) + c.t.a[7]*sin(c.t.b[7]*x+c.t.c[7]) + c.t.a[8]*sin(c.t.b[8]*x+c.t.c[8])+c.t.y0;
+    #ff(x)=c.t.a[1]*sin(-c.t.b[1]*x+c.t.c[1]) + c.t.a[2]*sin(-c.t.b[2]*x+c.t.c[2]) + c.t.a[3]*sin(-c.t.b[3]*x+c.t.c[3]) + c.t.a[4]*sin(-c.t.b[4]*x+c.t.c[4]) + c.t.a[5]*sin(-c.t.b[5]*x+c.t.c[5]) + c.t.a[6]*sin(-c.t.b[6]*x+c.t.c[6]) + c.t.a[7]*sin(-c.t.b[7]*x+c.t.c[7]) + c.t.a[8]*sin(-c.t.b[8]*x+c.t.c[8])+c.t.y0;
+    X=c.t.X;
+    Y=ff.(X);
+    plot(X,Y)
   end
-  X=f.(Y);
 
   plot!(X,Y,label="Road",line=(s.lw1*2,:solid,:black))
+  return pp
+end
+
+"""
+
+pp=lidarPlot(r,s,c,idx);
+pp=lidarPlot(r,s,c,idx,pp;(:append=>true));
+--------------------------------------------------------------------------------------\n
+Author: Huckleberry Febbo, Graduate Student, University of Michigan
+Date Create: 4/3/2017, Last Modified: 4/3/2017 \n
+--------------------------------------------------------------------------------------\n
+"""
+function lidarPlot(r,s,c,idx,args...;kwargs...)
+  kw = Dict(kwargs);
+
+  # check to see if user would like to add to an existing plot
+  if !haskey(kw,:append); kw_ = Dict(:append => false); append = get(kw_,:append,0);
+  else; append = get(kw,:append,0);
+  end
+  if !append; pp=plot(0,leg=:false); else pp=args[1]; end
+
+
+  # plot the LiDAR
+  if s.MPC
+    X_v = r.dfs_plant[idx][:x][1]  # using the begining of the simulated data from the vehicle model
+    Y_v = r.dfs_plant[idx][:y][1]
+    PSI_v = r.dfs_plant[idx][:psi][1]-pi/2
+  else
+    X_v = r.dfs[idx][:x][1]
+    Y_v = r.dfs[idx][:y][1]
+    PSI_v = r.dfs[idx][:psi][1]-pi/2
+  end
+
+  pts = Plots.partialcircle(PSI_v-pi,PSI_v+pi,50,c.m.Lr);
+  x, y = Plots.unzip(pts);
+  x += X_v;  y += Y_v;
+  pts = collect(zip(x, y));
+  plot!(pts, line=(s.lw1,0.2,:solid,:yellow),fill = (0, 0.2, :yellow),leg=true,label="LiDAR Range")
+
+  return pp
+end
+"""
+pp=pSimPath(n,r,s,c,idx)
+--------------------------------------------------------------------------------------\n
+Author: Huckleberry Febbo, Graduate Student, University of Michigan
+Date Create: 3/28/2017, Last Modified: 4/3/2017 \n
+--------------------------------------------------------------------------------------\n
+"""
+function pSimPath(n,r,s,c,idx)
+  pp=trackPlot(r,s,c,idx);
+  pp=lidarPlot(r,s,c,idx,pp;(:append=>true));
+  pp=statePlot(n,r,s,idx,1,2,pp;(:lims=>false),(:append=>true));
+  pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true)); # obstacles
+  pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true));  # vehicle
+  if !s.simulate savefig(string(r.results_dir,"pp.",s.format)) end
   return pp
 end
 
