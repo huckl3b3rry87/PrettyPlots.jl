@@ -22,6 +22,7 @@ export
 
     # OCP.jl & VehicleModel.jl plots
     obstaclePlot,
+    trackPlot,
     vehiclePlot,
     vtPlot,
     axLimsPlot,

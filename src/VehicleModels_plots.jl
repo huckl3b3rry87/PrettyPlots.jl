@@ -9,6 +9,7 @@ using .NLOptControl_plots
 
 export
       obstaclePlot,
+      trackPlot,
       vehiclePlot,
       vtPlot,
       axLimsPlot,
@@ -107,13 +108,6 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
 
     xaxis!(n.state.description[1]);
     yaxis!(n.state.description[2]);
-    if s.MPC
-      xlims!(minDF(r.dfs_plant,:x),maxDF(r.dfs_plant,:x));
-      ylims!(minDF(r.dfs_plant,:y),maxDF(r.dfs_plant,:y));
-    else
-      xlims!(minDF(r.dfs,:x),maxDF(r.dfs,:x));
-      ylims!(minDF(r.dfs,:y),maxDF(r.dfs,:y));
-    end
     if !s.simulate savefig(string(r.results_dir,"/",n.state.name[1],"_vs_",n.state.name[2],".",s.format)); end
   end
   return pp
@@ -125,11 +119,15 @@ pp=vehiclePlot(n,r,s,c,idx);
 pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true));
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 3/11/2017, Last Modified: 3/11/2017 \n
+Date Create: 3/11/2017, Last Modified: 4/4/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function vehiclePlot(n,r,s,c,idx,args...;kwargs...)
   kw = Dict(kwargs);
+
+  if !haskey(kw,:zoom); kw_=Dict(:zoom => false); zoom=get(kw_,:zoom,0);
+  else; zoom=get(kw,:zoom,0);
+  end
 
   # check to see if user would like to add to an existing plot
   if !haskey(kw,:append); kw_ = Dict(:append => false); append = get(kw_,:append,0);
@@ -160,8 +158,23 @@ function vehiclePlot(n,r,s,c,idx,args...;kwargs...)
   R = [ct -st;st ct];
   P2 = R * P;
   scatter!((P2[1,:]+X_v,P2[2,:]+Y_v), markershape = :square, markercolor = :black, markersize = s.ms1, fill = (0, 1, :black),leg=true, grid=true,label="Vehicle")
-  if !s.simulate; savefig(string(r.results_dir,"x_vs_y",".",s.format)); end
 
+  if !zoom
+    if s.MPC
+      xlims!(minDF(r.dfs_plant,:x),maxDF(r.dfs_plant,:x));
+      ylims!(minDF(r.dfs_plant,:y),maxDF(r.dfs_plant,:y));
+    else
+      xlims!(minDF(r.dfs,:x),maxDF(r.dfs,:x));
+      ylims!(minDF(r.dfs,:y),maxDF(r.dfs,:y));
+    end
+  else
+    xlims!(X_v-20.,X_v+80.);
+    ylims!(Y_v-50.,maxY+50.);
+    plot!(leg=:false)
+  end
+  #xlims!(c.m.Xlims[1],c.m.Xlims[2]);
+  #ylims!(c.m.Ylims[1],c.m.Ylims[2]);
+  if !s.simulate; savefig(string(r.results_dir,"x_vs_y",".",s.format)); end
   return pp
 end
 """
@@ -289,7 +302,7 @@ function mainSim(n,r,s,c,pa,idx)
   #srp=controlPlot(n,r,s,r.eval_num,1)
   pp=statePlot(n,r,s,idx,1,2;(:lims=>false));
   pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true)); # add obstacles
-  pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true)); # add the vehicle
+  pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true));  # add the vehicle
   if s.MPC; tp=tPlot(n,r,s,idx); else; tp=plot(0,leg=:false); end
   vt=vtPlot(n,r,s,pa,c,idx)
   l = @layout [a{0.3w} [grid(2,2)
@@ -317,26 +330,28 @@ function mainSimPath(n,r,s,c,pa,idx)
   rp=statePlot(n,r,s,idx,4)
   vt=vtPlot(n,r,s,pa,c,idx)
   pp=pSimPath(n,r,s,c,idx)
+  pz=pSimPath(n,r,s,c,idx;(:zoom=>true))
   if s.MPC; tp=tPlot(n,r,s,idx); else; tp=plot(0,leg=:false); end
   l = @layout [a{0.3w} [grid(2,2)
                         b{0.2h}]]
-  mainS=plot(pp,sap,vt,rp,vp,tp,layout=l,size=(1800,1200));
+  mainS=plot(pp,sap,vt,pz,rp,tp,layout=l,size=(1800,1200));
 
   return mainS
 end
 
 """
+# to visualize the current track in the field
+trackPlot(c)
 
-pp=trackPlot(r,s,c,idx);
-pp=trackPlot(r,s,c,idx,pp;(:append=>true));
+pp=trackPlot(c,pp;(:append=>true));
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/28/2017, Last Modified: 4/3/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function trackPlot(r,s,c,idx,args...;kwargs...)
+function trackPlot(c,args...;kwargs...)
   kw = Dict(kwargs);
-
+  s=Settings();
   # check to see if user would like to add to an existing plot
   if !haskey(kw,:append); kw_ = Dict(:append => false); append = get(kw_,:append,0);
   else; append = get(kw,:append,0);
@@ -349,10 +364,8 @@ function trackPlot(r,s,c,idx,args...;kwargs...)
     X=f.(Y);
   elseif c.t.func==:fourier
     ff(x)=c.t.a[1]*sin(c.t.b[1]*x+c.t.c[1]) + c.t.a[2]*sin(c.t.b[2]*x+c.t.c[2]) + c.t.a[3]*sin(c.t.b[3]*x+c.t.c[3]) + c.t.a[4]*sin(c.t.b[4]*x+c.t.c[4]) + c.t.a[5]*sin(c.t.b[5]*x+c.t.c[5]) + c.t.a[6]*sin(c.t.b[6]*x+c.t.c[6]) + c.t.a[7]*sin(c.t.b[7]*x+c.t.c[7]) + c.t.a[8]*sin(c.t.b[8]*x+c.t.c[8])+c.t.y0;
-    #ff(x)=c.t.a[1]*sin(-c.t.b[1]*x+c.t.c[1]) + c.t.a[2]*sin(-c.t.b[2]*x+c.t.c[2]) + c.t.a[3]*sin(-c.t.b[3]*x+c.t.c[3]) + c.t.a[4]*sin(-c.t.b[4]*x+c.t.c[4]) + c.t.a[5]*sin(-c.t.b[5]*x+c.t.c[5]) + c.t.a[6]*sin(-c.t.b[6]*x+c.t.c[6]) + c.t.a[7]*sin(-c.t.b[7]*x+c.t.c[7]) + c.t.a[8]*sin(-c.t.b[8]*x+c.t.c[8])+c.t.y0;
     X=c.t.X;
     Y=ff.(X);
-    plot(X,Y)
   end
 
   plot!(X,Y,label="Road",line=(s.lw1*2,:solid,:black))
@@ -377,7 +390,6 @@ function lidarPlot(r,s,c,idx,args...;kwargs...)
   end
   if !append; pp=plot(0,leg=:false); else pp=args[1]; end
 
-
   # plot the LiDAR
   if s.MPC
     X_v = r.dfs_plant[idx][:x][1]  # using the begining of the simulated data from the vehicle model
@@ -394,22 +406,29 @@ function lidarPlot(r,s,c,idx,args...;kwargs...)
   x += X_v;  y += Y_v;
   pts = collect(zip(x, y));
   plot!(pts, line=(s.lw1,0.2,:solid,:yellow),fill = (0, 0.2, :yellow),leg=true,label="LiDAR Range")
-
   return pp
 end
 """
+# to plot the second solution
+pp=pSimPath(n,r,s,c,2)
+
 pp=pSimPath(n,r,s,c,idx)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/28/2017, Last Modified: 4/3/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function pSimPath(n,r,s,c,idx)
-  pp=trackPlot(r,s,c,idx);
+function pSimPath(n,r,s,c,idx;kwargs...)
+  kw = Dict(kwargs);
+  if !haskey(kw,:zoom); kw_=Dict(:zoom => false); zoom=get(kw_,:zoom,0);
+  else; zoom=get(kw,:zoom,0);
+  end
+  pp=trackPlot(c);
   pp=lidarPlot(r,s,c,idx,pp;(:append=>true));
   pp=statePlot(n,r,s,idx,1,2,pp;(:lims=>false),(:append=>true));
   pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true)); # obstacles
-  pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true));  # vehicle
+  pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true),(:zoom=>zoom));  # vehicle
+
   if !s.simulate savefig(string(r.results_dir,"pp.",s.format)) end
   return pp
 end
