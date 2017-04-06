@@ -147,9 +147,9 @@ function vehiclePlot(n,r,s,c,idx,args...;kwargs...)
     Y_v = r.dfs_plant[idx][:y][end]
     PSI_v = r.dfs_plant[idx][:psi][end]-pi/2
   else
-    X_v = r.dfs[idx][:x][end]  # vehicles are in the same spot at the begining
-    Y_v = r.dfs[idx][:y][end]
-    PSI_v = r.dfs[idx][:psi][end]-pi/2
+    X_v = r.dfs[idx][:x][1] # start at begining
+    Y_v = r.dfs[idx][:y][1]
+    PSI_v = r.dfs[idx][:psi][1]-pi/2
   end
 
   P = [XQ;YQ];
@@ -169,7 +169,7 @@ function vehiclePlot(n,r,s,c,idx,args...;kwargs...)
     end
   else
     xlims!(X_v-20.,X_v+80.);
-    ylims!(Y_v-50.,maxY+50.);
+    ylims!(Y_v-50.,Y_v+50.);
     plot!(leg=:false)
   end
   #xlims!(c.m.Xlims[1],c.m.Xlims[2]);
@@ -424,7 +424,9 @@ function pSimPath(n,r,s,c,idx;kwargs...)
   else; zoom=get(kw,:zoom,0);
   end
   pp=trackPlot(c);
-  pp=lidarPlot(r,s,c,idx,pp;(:append=>true));
+  if s.MPC
+    pp=lidarPlot(r,s,c,idx,pp;(:append=>true));
+  end
   pp=statePlot(n,r,s,idx,1,2,pp;(:lims=>false),(:append=>true));
   pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true)); # obstacles
   pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true),(:zoom=>zoom));  # vehicle
