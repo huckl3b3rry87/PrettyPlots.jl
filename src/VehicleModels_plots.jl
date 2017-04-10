@@ -15,7 +15,8 @@ export
       axLimsPlot,
       mainSim,
       mainSimPath,
-      pSimPath
+      pSimPath,
+      tplot
 
 """
 # to visualize the current obstacle in the field
@@ -284,6 +285,58 @@ function axLimsPlot(n::NLOpt,r::Result,s::Settings,pa::VehicleModels.Vpara,idx::
   plot!(size=(s.s1,s.s1));
   if !s.simulate savefig(string(r.results_dir,"axp.",s.format)) end
   return axp
+end
+"""
+tp=tPlot(n,r,s,idx)
+tp=tPlot(n,r,s,idx,tp;(:append=>true))
+# plot the optimization times
+# this is an MPC plot
+--------------------------------------------------------------------------------------\n
+Author: Huckleberry Febbo, Graduate Student, University of Michigan
+Date Create: 3/11/2017, Last Modified: 3/11/2017 \n
+--------------------------------------------------------------------------------------\n
+"""
+function tPlot(n::NLOpt,r::Result,s::Settings,idx::Int64,args...;kwargs...);
+  if !s.MPC; error("\n This plot is for MPC \n"); end
+
+  kw = Dict(kwargs);
+  # check to see if user would like to add to an existing plot
+  if !haskey(kw,:append); kw_ = Dict(:append => false); append = get(kw_,:append,0);
+  else; append = get(kw,:append,0);
+  end
+  if !append; tp=plot(0,leg=:false); else tp=args[1]; end
+
+  # check to see if user would like to label legend
+  if !haskey(kw,:legend); kw_ = Dict(:legend => ""); legend_string = get(kw_,:legend,0);
+  else; legend_string = get(kw,:legend,0);
+  end
+
+  # to avoid a bunch of jumping around in the simulation
+	idx_max=length(r.dfs_opt);
+	if (idx_max<10); idx_max=10 end
+
+	# define variables
+  T_solve = zeros(idx_max);                # solve time for each evaluation
+  L=length(r.dfs_opt);
+
+  T_solve[1:L]=[r.dfs_opt[jj][:t_solve][1] for jj in 1:L];
+
+#	T_total =  sum(T_solve[idx,:]);          # total time spent optimizing
+	#t_e = r.dfs_plant[idx][:t][end];         # final simulation time for vehicle
+
+  scatter!(1:idx,T_solve[1:idx],markershape = :square, markercolor = :black, markersize = s.ms2,label=string(legend_string," opt. times"))
+#	str1 = string(legend_string, @sprintf(" total solve time  = %0.2f", T_total), " s");
+	#annotate!([(  maximum(xlims())/2, (maximum(ylims())*1.8 + (idx-1)*2), text(str1,16,:black,:center)  )])
+	#str2 = string(legend_string, @sprintf(" total sim. time = %0.2f", t_e), " s");
+	#annotate!([(  maximum(xlims())/2, (maximum(ylims())*1.4 + (idx-1)*2), text(str2,16,:black,:center)  )])
+	plot!(1:length(T_solve),n.mpc.tex*ones(length(T_solve)), w=s.lw1, leg=:true,label="real-time threshhold",leg=:topright)
+
+	ylims!((0,n.mpc.tex*1.2))
+	yaxis!("Optimization Time (s)")
+	xaxis!("Evaluation Number")
+  plot!(size=(s.s1,s.s1));
+	if !s.simulate savefig(string(r.results_dir,"tplot.",s.format)) end
+	return tp
 end
 
 
