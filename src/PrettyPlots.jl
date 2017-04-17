@@ -28,6 +28,7 @@ export
     axLimsPlot,
     mainSim,
     mainSimPath,
-    pSimPath
+    pSimPath,
+    pSimGR
 
 end # module

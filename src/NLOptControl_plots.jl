@@ -56,9 +56,9 @@ function statePlot(n::NLOpt,r::Result,s::Settings,idx::Int64,st::Int64,args...;k
   end
 
 	if r.dfs[idx]!=nothing
-  	t_vec=linspace(0.0,max(5,round(r.dfs[end][:t][end]/5)*5),s.L);
+  	t_vec=linspace(0.0,max(5,ceil(r.dfs[end][:t][end]/1)*1),s.L);
 	else
-		t_vec=linspace(0.0,max(5,round(r.dfs_plant[end][:t][end]/5)*5),s.L);
+		t_vec=linspace(0.0,max(5,ceil(r.dfs_plant[end][:t][end]/1)*1),s.L);
 	end
 
   if lims
@@ -78,7 +78,7 @@ function statePlot(n::NLOpt,r::Result,s::Settings,idx::Int64,st::Int64,args...;k
   end
 
   # plot the values TODO if there are no lims then you cannot really see the signal
-	if r.dfs[idx]!=nothing
+	if r.dfs[idx]!=nothing && !s.plantOnly
   	plot!(r.dfs[idx][:t],r.dfs[idx][n.state.name[st]],w=s.lw1,label=string(legend_string,"mpc"));
 	end
   if s.MPC
@@ -141,7 +141,7 @@ function statePlot(n::NLOpt,r::Result,s::Settings,idx::Int64,st1::Int64,st2::Int
   end
 
   # plot the values
-	if r.dfs[idx]!=nothing
+	if r.dfs[idx]!=nothing && !s.plantOnly
 		plot!(r.dfs[idx][n.state.name[st1]],r.dfs[idx][n.state.name[st2]],w=s.lw1,label=string(legend_string,"mpc"));
 	end
 
@@ -205,7 +205,7 @@ function controlPlot(n::NLOpt,r::Result,s::Settings,idx::Int64,ctr::Int64,args..
   end
 
   # plot the values
-	if r.dfs[idx]!=nothing
+	if r.dfs[idx]!=nothing  && !s.plantOnly
   	plot!(r.dfs[idx][:t],r.dfs[idx][n.control.name[ctr]],w=s.lw1,label=string(legend_string,"mpc"));
 	end
   if s.MPC

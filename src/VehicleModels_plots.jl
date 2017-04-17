@@ -16,7 +16,8 @@ export
       mainSim,
       mainSimPath,
       pSimPath,
-      tplot
+      pSimGR,
+      tPlot
 
 """
 # to visualize the current obstacle in the field
@@ -189,14 +190,14 @@ function vtPlot(n::NLOpt,r::Result,s::Settings,pa::VehicleModels.Vpara,c,idx::In
 	@unpack_Vpara pa
 
   if !s.MPC && r.dfs[idx]!=nothing
-  	t_vec=linspace(0,round(r.dfs[end][:t][end]/10)*10,s.L);
-	else
-    t_vec=linspace(0,max(5,round(r.dfs_plant[end][:t][end]/5)*5),s.L);
-	end
+    t_vec=linspace(0.0,max(5,ceil(r.dfs[end][:t][end]/1)*1),s.L);
+  else
+    t_vec=linspace(0,max(5,ceil(r.dfs_plant[end][:t][end]/1)*1),s.L);
+  end
 
 	vt=plot(t_vec,Fz_min*ones(s.L,1),line=(s.lw2),label="min")
 
-  if r.dfs[idx]!=nothing
+  if r.dfs[idx]!=nothing && !s.plantOnly
     V=r.dfs[idx][:v];R=r.dfs[idx][:r];SA=r.dfs[idx][:sa];
     if c.m.model!=:ThreeDOFv1
       Ax=r.dfs[idx][:ax]; U=r.dfs[idx][:ux];
@@ -260,13 +261,14 @@ function axLimsPlot(n::NLOpt,r::Result,s::Settings,pa::VehicleModels.Vpara,idx::
 
   @unpack_Vpara pa
 
-  if !s.MPC && r.dfs[idx]!=nothing
-    t_vec=linspace(0,max(5,round(r.dfs[end][:t][end]/5)*5),s.L);
-	else
-    t_vec=linspace(0,max(5,round(r.dfs_plant[end][:t][end]/5)*5),s.L);
-	end
+  if !s.MPC && r.dfs[idx]!=nothing && !s.plantOnly
+    t_vec=linspace(0.0,max(5,ceil(r.dfs[end][:t][end]/1)*1),s.L);
+  else
+    t_vec=linspace(0,max(5,ceil(r.dfs_plant[end][:t][end]/1)*1),s.L);
+  end
 
-  if r.dfs[idx]!=nothing
+
+  if r.dfs[idx]!=nothing && !s.plantOnly
     U = r.dfs[idx][:ux]
     plot!(r.dfs[idx][:t],@Ax_min(),w=s.lw1,label="min-mpc");
     plot!(r.dfs[idx][:t],@Ax_max(),w=s.lw1,label="max-mpc");
@@ -476,16 +478,88 @@ function pSimPath(n,r,s,c,idx;kwargs...)
   if !haskey(kw,:zoom); kw_=Dict(:zoom => false); zoom=get(kw_,:zoom,0);
   else; zoom=get(kw,:zoom,0);
   end
-  pp=trackPlot(c);
-  if s.MPC
-    pp=lidarPlot(r,s,c,idx,pp;(:append=>true));
+  if isdefined(c.t.X)
+    pp=trackPlot(c);
+    if s.MPC
+      pp=lidarPlot(r,s,c,idx,pp;(:append=>true));
+    end
+  else
+    if s.MPC
+      pp=lidarPlot(r,s,c,idx);
+    end
   end
+
   pp=statePlot(n,r,s,idx,1,2,pp;(:lims=>false),(:append=>true));
-  pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true)); # obstacles
+  pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true));               # obstacles
   pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true),(:zoom=>zoom));  # vehicle
 
   if !s.simulate savefig(string(r.results_dir,"pp.",s.format)) end
   return pp
+end
+"""
+
+--------------------------------------------------------------------------------------\n
+Author: Huckleberry Febbo, Graduate Student, University of Michigan
+Date Create: 4/13/2017, Last Modified: 4/13/2017 \n
+--------------------------------------------------------------------------------------\n
+"""
+
+function mainSim(n,r,s,c)
+
+  tt=zeros(r.eval_num);
+  for ii=1:r.eval_num-1
+    tt[ii]=r.dfs_opt[ii][:t_solve][1]
+  end
+  t_ave=mean(tt);
+
+  if r.eval_num>2;
+     anim = @animate for ii in 1:length(r.dfs)
+      mainSimPath(n,r,s,c,pa,ii);
+    end
+    gif(anim, string(r.results_dir,"mainSimPath.gif"), fps = Int(ceil(1/t_ave)));
+    cd(r.results_dir)
+      run(`ffmpeg -f gif -i mainSimPath.gif RESULT.mp4`)
+      write("description.txt", description)
+    cd(r.main_dir)
+  else
+    s=Settings(;save=true,MPC=false,simulate=false,format=:png);
+    pSimPath(n,r,s,c,2)
+    allPlots(n,r,s,2)
+  end
+  nothing
+end
+
+"""
+
+--------------------------------------------------------------------------------------\n
+Author: Huckleberry Febbo, Graduate Student, University of Michigan
+Date Create: 4/13/2017, Last Modified: 4/13/2017 \n
+--------------------------------------------------------------------------------------\n
+"""
+
+function pSim(n,r,s,c)
+  anim = @animate for ii in 1:length(r.dfs)
+    pSimPath(n,r,s,c,ii);
+  end
+  gif(anim, string(r.results_dir,"pSimPath.gif"), fps = 5);
+  nothing
+end
+
+
+"""
+
+--------------------------------------------------------------------------------------\n
+Author: Huckleberry Febbo, Graduate Student, University of Michigan
+Date Create: 4/13/2017, Last Modified: 4/13/2017 \n
+--------------------------------------------------------------------------------------\n
+"""
+
+function pSimGR(n,r,s,c)
+  ENV["GKS_WSTYPE"]="mov"
+  gr(show=true)
+  for ii in 1:length(r.dfs)
+    pSimPath(n,r,s,c,ii);
+  end
 end
 
 end # module
