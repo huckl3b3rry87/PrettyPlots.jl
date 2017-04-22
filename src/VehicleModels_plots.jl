@@ -368,33 +368,6 @@ end
 
 
 """
-mainS=mainSimPath(n,r,s,c,pa,r.eval_num)
-mainS=mainSimPath(n,r,s,c,pa,idx)
---------------------------------------------------------------------------------------\n
-Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 3/28/2017, Last Modified: 3/28/2017 \n
---------------------------------------------------------------------------------------\n
-"""
-function mainSimPath(n,r,s,c,pa,idx)
-  if c.m.model==:ThreeDOFv1
-    sap=controlPlot(n,r,s,idx,1)
-  elseif c.m.model==:ThreeDOFv2
-    sap=statePlot(n,r,s,idx,6)
-  end
-  vp=statePlot(n,r,s,idx,3)
-  rp=statePlot(n,r,s,idx,4)
-  vt=vtPlot(n,r,s,pa,c,idx)
-  pp=pSimPath(n,r,s,c,idx)
-  pz=pSimPath(n,r,s,c,idx;(:zoom=>true))
-  if s.MPC; tp=tPlot(n,r,s,idx); else; tp=plot(0,leg=:false); end
-  l = @layout [a{0.3w} [grid(2,2)
-                        b{0.2h}]]
-  mainS=plot(pp,sap,vt,pz,rp,tp,layout=l,size=(1800,1200));
-
-  return mainS
-end
-
-"""
 # to visualize the current track in the field
 trackPlot(c)
 
@@ -478,7 +451,7 @@ function pSimPath(n,r,s,c,idx;kwargs...)
   if !haskey(kw,:zoom); kw_=Dict(:zoom => false); zoom=get(kw_,:zoom,0);
   else; zoom=get(kw,:zoom,0);
   end
-  if isdefined(c.t.X)
+  if !isempty(c.t.X)
     pp=trackPlot(c);
     if s.MPC
       pp=lidarPlot(r,s,c,idx,pp;(:append=>true));
@@ -496,15 +469,43 @@ function pSimPath(n,r,s,c,idx;kwargs...)
   if !s.simulate savefig(string(r.results_dir,"pp.",s.format)) end
   return pp
 end
-"""
 
+"""
+mainS=mainPath(n,r,s,c,pa,r.eval_num)
+mainS=mainPath(n,r,s,c,pa,idx)
+--------------------------------------------------------------------------------------\n
+Author: Huckleberry Febbo, Graduate Student, University of Michigan
+Date Create: 3/28/2017, Last Modified: 3/28/2017 \n
+--------------------------------------------------------------------------------------\n
+"""
+function mainPath(n,r,s,c,pa,idx)
+  if c.m.model==:ThreeDOFv1
+    sap=controlPlot(n,r,s,idx,1)
+  elseif c.m.model==:ThreeDOFv2
+    sap=statePlot(n,r,s,idx,6)
+  end
+  vp=statePlot(n,r,s,idx,3)
+  rp=statePlot(n,r,s,idx,4)
+  vt=vtPlot(n,r,s,pa,c,idx)
+  pp=pSimPath(n,r,s,c,idx)
+  pz=pSimPath(n,r,s,c,idx;(:zoom=>true))
+  if s.MPC; tp=tPlot(n,r,s,idx); else; tp=plot(0,leg=:false); end
+  l = @layout [a{0.3w} [grid(2,2)
+                        b{0.2h}]]
+  mainS=plot(pp,sap,vt,pz,rp,tp,layout=l,size=(1800,1200));
+
+  return mainS
+end
+
+"""
+mainSimPath(n,r,s,c,pa)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 4/13/2017, Last Modified: 4/13/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 
-function mainSim(n,r,s,c)
+function mainSimPath(n,r,s,c,pa)
 
   tt=zeros(r.eval_num);
   for ii=1:r.eval_num-1
@@ -514,12 +515,11 @@ function mainSim(n,r,s,c)
 
   if r.eval_num>2;
      anim = @animate for ii in 1:length(r.dfs)
-      mainSimPath(n,r,s,c,pa,ii);
+      mainPath(n,r,s,c,pa,ii);
     end
     gif(anim, string(r.results_dir,"mainSimPath.gif"), fps = Int(ceil(1/t_ave)));
     cd(r.results_dir)
       run(`ffmpeg -f gif -i mainSimPath.gif RESULT.mp4`)
-      write("description.txt", description)
     cd(r.main_dir)
   else
     s=Settings(;save=true,MPC=false,simulate=false,format=:png);
