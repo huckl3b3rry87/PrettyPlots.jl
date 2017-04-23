@@ -31,17 +31,27 @@ pp=obstaclePlot(n,r,s,c,idx);
 
 # to add to an exsting position plot
 pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true));
+
+# posterPlot
+pp=obstaclePlot(n,r,s,c,ii,pp;(:append=>true),(:posterPlot=>true)); # add obstacles
+
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 4/3/2017 \n
 --------------------------------------------------------------------------------------\n
 """
+
 function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
   kw = Dict(kwargs);
 
   # check to see if is a basic plot
   if !haskey(kw,:basic); kw_ = Dict(:basic => false); basic = get(kw_,:basic,0);
   else; basic=get(kw,:basic,0);
+  end
+
+  # check to see if is a poster plot
+  if !haskey(kw,:posterPlot); kw_ = Dict(:posterPlot=>false); posterPlot= get(kw_,:posterPlot,0);
+  else; posterPlot=get(kw,:posterPlot,0);
   end
 
   if basic
@@ -56,11 +66,10 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
           x += c.o.X0[i] + c.o.s_x[i]*tc;
           y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*tc;
           pts = collect(zip(x, y))
-
           if i==1
-            plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="Obstacles",leg=:bottomleft)
+            plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="Obstacles")
           else
-            plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="",leg=:bottomleft)
+            plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="")
           end
       end
     end
@@ -73,12 +82,14 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
 
     # plot the goal; assuming same in x and y
     if c.g.name!=:NA
-      if isnan(n.XF_tol[1]); rg=1; else rg=n.XF_tol[1]; end[]
-      pts = Plots.partialcircle(0,2π,100,rg);
-      x, y = Plots.unzip(pts);
-      x += c.g.x_ref;  y += c.g.y_ref;
-      pts = collect(zip(x, y));
-      plot!(pts, fill = (0, 0.7, :green),leg=true,label="Goal")
+      if isnan(n.XF_tol[1]); rg=1; else rg=n.XF_tol[1]; end
+      if !posterPlot || idx ==r.eval_num
+        pts = Plots.partialcircle(0,2π,100,rg);
+        x, y = Plots.unzip(pts);
+        x += c.g.x_ref;  y += c.g.y_ref;
+        pts = collect(zip(x, y));
+        plot!(pts,line=(s.lw1,1,:solid,:green),fill = (0, 1, :green),leg=true,label="Goal")
+      end
     end
 
     if c.o.name!=:NA
@@ -100,10 +111,24 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
           y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*tc;
         end
         pts = collect(zip(x, y))
-        if i==1
-          plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="Obstacles",leg=:bottomleft)
+        if posterPlot
+          shade=idx/r.eval_num;
+          if idx==r.eval_num && i==4  # NOTE either the obstacles increase in size or we do not get a legend, so this is a fix for now ! -> making it an obstacle that does not appear on the plot at that time
+            plot!(pts,line=(s.lw1,shade,:solid,:red),fill=(0,shade,:red),leg=true,label="Obstacles")
+        #    plot!(pts,line=(s.lw1,0.0,:solid,:red),fill=(0,shade,:red),leg=true,label="Obstacles")
+          else
+            plot!(pts,line=(s.lw1,0.0,:solid,:red),fill=(0,shade,:red),leg=true,label="")
+          end
+          #annotate!(x[1],y[1],text(string("t=",idx*c.m.tex," s"),10,:black,:center))
+          X=c.o.X0[i] + c.o.s_x[i]*r.dfs_plant[idx][:t][end]
+          Y=c.o.Y0[i] + c.o.s_y[i]*r.dfs_plant[idx][:t][end];
+          annotate!(X,Y,text(string(idx*c.m.tex,"s"),10,:black,:center))
         else
-          plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="",leg=:bottomleft)
+          if i==1
+            plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="Obstacles")
+          else
+            plot!(pts, line=(s.lw1,0.0,:solid,:red),fill = (0, 0.7, :red),leg=true,label="")
+          end
         end
       end
     end
@@ -114,6 +139,7 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
   end
   return pp
 end
+
 obstaclePlot(n,c)=obstaclePlot(n,1,1,c,1,;(:basic=>true))
 
 """
@@ -137,6 +163,11 @@ function vehiclePlot(n,r,s,c,idx,args...;kwargs...)
   end
   if !append; pp=plot(0,leg=:false); else pp=args[1]; end
 
+  # check to see if is a poster plot
+  if !haskey(kw,:posterPlot); kw_ = Dict(:posterPlot=>false); posterPlot= get(kw_,:posterPlot,0);
+  else; posterPlot=get(kw,:posterPlot,0);
+  end
+
   # contants
   w=1.9; #width TODO move these to vehicle parameters
   h=3.3; #height
@@ -159,8 +190,11 @@ function vehiclePlot(n,r,s,c,idx,args...;kwargs...)
   st = sin(PSI_v);
   R = [ct -st;st ct];
   P2 = R * P;
-  scatter!((P2[1,:]+X_v,P2[2,:]+Y_v), markershape = :square, markercolor = :black, markersize = s.ms1, fill = (0, 1, :black),leg=true, grid=true,label="Vehicle")
-
+  if !posterPlot || idx==r.eval_num
+    scatter!((P2[1,:]+X_v,P2[2,:]+Y_v), markershape = :square, markercolor = :black, markersize = s.ms1, fill = (0, 1, :black),leg=true, grid=true,label="Vehicle")
+  else
+    scatter!((P2[1,:]+X_v,P2[2,:]+Y_v), markershape = :square, markercolor = :black, markersize = s.ms1, fill = (0, 1, :black),leg=true, grid=true,label="")
+  end
   if !zoom
     if s.MPC
       xlims!(minDF(r.dfs_plant,:x),maxDF(r.dfs_plant,:x));
@@ -174,8 +208,15 @@ function vehiclePlot(n,r,s,c,idx,args...;kwargs...)
     ylims!(Y_v-50.,Y_v+50.);
     plot!(leg=:false)
   end
-  #xlims!(c.m.Xlims[1],c.m.Xlims[2]);
-  #ylims!(c.m.Ylims[1],c.m.Ylims[2]);
+
+  if posterPlot
+    t=idx*c.m.tex;
+    annotate!(X_v,Y_v-4,text(string("t=",t," s"),10,:black,:center))
+    xlims!(c.m.Xlims[1],c.m.Xlims[2]);
+    ylims!(c.m.Ylims[1],c.m.Ylims[2]);
+    #xlims!(158,224);
+    #ylims!(-2,130);
+  end
   if !s.simulate; savefig(string(r.results_dir,"x_vs_y",".",s.format)); end
   return pp
 end
@@ -322,15 +363,7 @@ function tPlot(n::NLOpt,r::Result,s::Settings,idx::Int64,args...;kwargs...);
   L=length(r.dfs_opt);
 
   T_solve[1:L]=[r.dfs_opt[jj][:t_solve][1] for jj in 1:L];
-
-#	T_total =  sum(T_solve[idx,:]);          # total time spent optimizing
-	#t_e = r.dfs_plant[idx][:t][end];         # final simulation time for vehicle
-
   scatter!(1:idx,T_solve[1:idx],markershape = :square, markercolor = :black, markersize = s.ms2,label=string(legend_string," opt. times"))
-#	str1 = string(legend_string, @sprintf(" total solve time  = %0.2f", T_total), " s");
-	#annotate!([(  maximum(xlims())/2, (maximum(ylims())*1.8 + (idx-1)*2), text(str1,16,:black,:center)  )])
-	#str2 = string(legend_string, @sprintf(" total sim. time = %0.2f", t_e), " s");
-	#annotate!([(  maximum(xlims())/2, (maximum(ylims())*1.4 + (idx-1)*2), text(str2,16,:black,:center)  )])
 	plot!(1:length(T_solve),n.mpc.tex*ones(length(T_solve)), w=s.lw1, leg=:true,label="real-time threshhold",leg=:topright)
 
 	ylims!((0,n.mpc.tex*1.2))
@@ -561,5 +594,57 @@ function pSimGR(n,r,s,c)
     pSimPath(n,r,s,c,ii);
   end
 end
+
+"""
+default(guidefont = font(17), tickfont = font(15), legendfont = font(12), titlefont = font(20))
+s=Settings(;save=true,MPC=true,simulate=false,format=:png,plantOnly=true);
+posterP(n,r,s,c)
+--------------------------------------------------------------------------------------\n
+Author: Huckleberry Febbo, Graduate Student, University of Michigan
+Date Create: 4/13/2017, Last Modified: 4/13/2017 \n
+--------------------------------------------------------------------------------------\n
+"""
+
+function posterP(n,r,s,c)
+
+  # static plots for each frame
+  idx=r.eval_num;
+  sap=statePlot(n,r,s,idx,6)
+  longv=statePlot(n,r,s,idx,7)
+  axp=axLimsPlot(n,r,s,pa,idx); # add nonlinear acceleration limits
+  axp=statePlot(n,r,s,idx,8,axp;(:lims=>false),(:append=>true));
+  pp=statePlot(n,r,s,idx,1,2;(:lims=>false));
+  if s.MPC; tp=tPlot(n,r,s,idx); else; tp=plot(0,leg=:false); end
+  vt=vtPlot(n,r,s,pa,c,idx)
+
+  # dynamic plots ( maybe only update every 5 frames or so)
+  v=Vector(1:5:r.eval_num); if v[end]!=r.eval_num; append!(v,r.eval_num); end
+  for ii in v
+    if ii==1
+      st1=1;st2=2;
+      # values
+  		temp = [r.dfs_plant[jj][n.state.name[st1]] for jj in 1:r.eval_num];
+  		vals1=[idx for tempM in temp for idx=tempM];
+
+  		# values
+  		temp = [r.dfs_plant[jj][n.state.name[st2]] for jj in 1:r.eval_num];
+  		vals2=[idx for tempM in temp for idx=tempM];
+
+  		pp=plot(vals1,vals2,w=s.lw2,label="Vehicle Trajectory");
+
+      pp=obstaclePlot(n,r,s,c,ii,pp;(:append=>true),(:posterPlot=>true));                     # add obstacles
+      pp=vehiclePlot(n,r,s,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add the vehicle
+    else
+      pp=obstaclePlot(n,r,s,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add obstacles
+      pp=vehiclePlot(n,r,s,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add the vehicle
+    end
+  end
+  l = @layout [a{0.5w} [grid(2,2)
+                        b{0.2h}]]
+  poster=plot(pp,sap,vt,longv,axp,tp,layout=l,size=(1800,1200));
+  savefig(string(r.results_dir,"poster",".",s.format));
+  nothing
+end
+
 
 end # module

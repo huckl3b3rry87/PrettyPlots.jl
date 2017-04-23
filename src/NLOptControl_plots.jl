@@ -11,7 +11,7 @@ export
       allPlots,
       adjust_axis
 """
-
+allPlots(n,r,Settings(),idx)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 2/10/2017, Last Modified: 3/11/2017 \n
