@@ -67,10 +67,9 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
           y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*tc;
           pts = collect(zip(x, y))
           if i==1
-            plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="Obstacles")
-          else
-            plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="")
+            scatter!((c.o.X0[i],c.o.Y0[i]),color=[:red],marker=([:circle :d],12,0.8,stroke(3,:red)),ms=s.ms2,label="Obstacles")
           end
+          plot!(pts,line=(s.lw1,0.0,:solid,:red),fill=(0, 0.7, :red),leg=true,label="")
       end
     end
   else
@@ -88,7 +87,8 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
         x, y = Plots.unzip(pts);
         x += c.g.x_ref;  y += c.g.y_ref;
         pts = collect(zip(x, y));
-        plot!(pts,line=(s.lw1,1,:solid,:green),fill = (0, 1, :green),leg=true,label="Goal")
+        scatter!([ c.g.x_ref,c.g.y_ref],color=[:green],marker=([:circle :d],12,0.8,stroke(3,:green)),ms=s.ms2,label="Goal")
+        plot!(pts,line=(s.lw1,1,:solid,:green),fill = (0, 1, :green),leg=true,label="")
       end
     end
 
@@ -111,24 +111,21 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
           y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*tc;
         end
         pts = collect(zip(x, y))
+        X=c.o.X0[i] + c.o.s_x[i]*r.dfs_plant[idx][:t][end]
+        Y=c.o.Y0[i] + c.o.s_y[i]*r.dfs_plant[idx][:t][end];
         if posterPlot
           shade=idx/r.eval_num;
           if idx==r.eval_num && i==4  # NOTE either the obstacles increase in size or we do not get a legend, so this is a fix for now ! -> making it an obstacle that does not appear on the plot at that time
             plot!(pts,line=(s.lw1,shade,:solid,:red),fill=(0,shade,:red),leg=true,label="Obstacles")
-        #    plot!(pts,line=(s.lw1,0.0,:solid,:red),fill=(0,shade,:red),leg=true,label="Obstacles")
           else
             plot!(pts,line=(s.lw1,0.0,:solid,:red),fill=(0,shade,:red),leg=true,label="")
           end
-          #annotate!(x[1],y[1],text(string("t=",idx*c.m.tex," s"),10,:black,:center))
-          X=c.o.X0[i] + c.o.s_x[i]*r.dfs_plant[idx][:t][end]
-          Y=c.o.Y0[i] + c.o.s_y[i]*r.dfs_plant[idx][:t][end];
           annotate!(X,Y,text(string(idx*c.m.tex,"s"),10,:black,:center))
         else
           if i==1
-            plot!(pts, line=(s.lw1,0.7,:solid,:red),fill = (0, 0.7, :red),leg=true,label="Obstacles")
-          else
-            plot!(pts, line=(s.lw1,0.0,:solid,:red),fill = (0, 0.7, :red),leg=true,label="")
+            scatter!((X,Y),color=[:red],marker=([:circle :d],12,0.8,stroke(3,:red)),ms=s.ms2,label="Obstacles")
           end
+          plot!(pts,line=(s.lw1,0.0,:solid,:red),fill=(0, 0.7, :red),leg=true,label="")
         end
       end
     end
@@ -142,6 +139,13 @@ end
 
 obstaclePlot(n,c)=obstaclePlot(n,1,1,c,1,;(:basic=>true))
 
+#=
+using Plots
+import Images
+#ENV["PYTHONPATH"]="/home/febbo/.julia/v0.5/Conda/deps/usr/bin/python"
+img=Images.load(Pkg.dir("PrettyPlots/src/humvee.png"));
+plot(img)
+=#
 """
 pp=vehiclePlot(n,r,s,c,idx);
 pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true));
@@ -164,7 +168,7 @@ function vehiclePlot(n,r,s,c,idx,args...;kwargs...)
   if !append; pp=plot(0,leg=:false); else pp=args[1]; end
 
   # check to see if is a poster plot
-  if !haskey(kw,:posterPlot); kw_ = Dict(:posterPlot=>false); posterPlot= get(kw_,:posterPlot,0);
+  if !haskey(kw,:posterPlot); kw_ = Dict(:posterPlot=>false); posterPlot=get(kw_,:posterPlot,0);
   else; posterPlot=get(kw,:posterPlot,0);
   end
 
@@ -191,22 +195,26 @@ function vehiclePlot(n,r,s,c,idx,args...;kwargs...)
   R = [ct -st;st ct];
   P2 = R * P;
   if !posterPlot || idx==r.eval_num
-    scatter!((P2[1,:]+X_v,P2[2,:]+Y_v), markershape = :square, markercolor = :black, markersize = s.ms1, fill = (0, 1, :black),leg=true, grid=true,label="Vehicle")
-  else
-    scatter!((P2[1,:]+X_v,P2[2,:]+Y_v), markershape = :square, markercolor = :black, markersize = s.ms1, fill = (0, 1, :black),leg=true, grid=true,label="")
+    scatter!((X_v,Y_v),color=[:black],marker=([:rect :d],4,0.8,stroke(3,:black)), grid=true,label="Vehicle")
   end
+  scatter!((P2[1,:]+X_v,P2[2,:]+Y_v), markershape = :square, markercolor = :black, markersize = s.ms1, fill = (0, 1, :black),leg=true, grid=true,label="")
+
   if !zoom
-    if s.MPC
-      xlims!(minDF(r.dfs_plant,:x),maxDF(r.dfs_plant,:x));
-      ylims!(minDF(r.dfs_plant,:y),maxDF(r.dfs_plant,:y));
+    if s.MPC  # TODO push this to a higher level
+      xL=minDF(r.dfs_plant,:x);xU=maxDF(r.dfs_plant,:x);
+      yL=minDF(r.dfs_plant,:y);yU=maxDF(r.dfs_plant,:y);
     else
-      xlims!(minDF(r.dfs,:x),maxDF(r.dfs,:x));
-      ylims!(minDF(r.dfs,:y),maxDF(r.dfs,:y));
+      xL=minDF(r.dfs,:x);xU=maxDF(r.dfs,:x);
+      yL=minDF(r.dfs,:y);yU=maxDF(r.dfs,:y);
     end
+      dx=xU-xL;dy=yU-yL; # axis equal
+      if dx>dy; yU=yL+dx; else xU=xL+dy; end
+      xlims!(xL,xU);
+      ylims!(yL,yU);
   else
     xlims!(X_v-20.,X_v+80.);
     ylims!(Y_v-50.,Y_v+50.);
-    plot!(leg=:false)
+    #plot!(leg=:false) # TODO could make an option for the legend
   end
 
   if posterPlot
@@ -214,8 +222,6 @@ function vehiclePlot(n,r,s,c,idx,args...;kwargs...)
     annotate!(X_v,Y_v-4,text(string("t=",t," s"),10,:black,:center))
     xlims!(c.m.Xlims[1],c.m.Xlims[2]);
     ylims!(c.m.Ylims[1],c.m.Ylims[2]);
-    #xlims!(158,224);
-    #ylims!(-2,130);
   end
   if !s.simulate; savefig(string(r.results_dir,"x_vs_y",".",s.format)); end
   return pp
@@ -307,7 +313,6 @@ function axLimsPlot(n::NLOpt,r::Result,s::Settings,pa::VehicleModels.Vpara,idx::
   else
     t_vec=linspace(0,max(5,ceil(r.dfs_plant[end][:t][end]/1)*1),s.L);
   end
-
 
   if r.dfs[idx]!=nothing && !s.plantOnly
     U = r.dfs[idx][:ux]
@@ -429,7 +434,7 @@ function trackPlot(c,args...;kwargs...)
     Y=ff.(X);
   end
 
-  plot!(X,Y,label="Road",line=(s.lw1*2,:solid,:black))
+  plot!(X,Y,label="Road",line=(s.lw1*10,0.3,:solid,:black))
   return pp
 end
 
@@ -487,11 +492,11 @@ function pSimPath(n,r,s,c,idx;kwargs...)
   if !isempty(c.t.X)
     pp=trackPlot(c);
     if s.MPC
-      pp=lidarPlot(r,s,c,idx,pp;(:append=>true));
+    #  pp=lidarPlot(r,s,c,idx,pp;(:append=>true)); # TODO add LiDAR back in
     end
   else
     if s.MPC
-      pp=lidarPlot(r,s,c,idx);
+  #    pp=lidarPlot(r,s,c,idx);
     end
   end
 
@@ -512,11 +517,8 @@ Date Create: 3/28/2017, Last Modified: 3/28/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function mainPath(n,r,s,c,pa,idx)
-  if c.m.model==:ThreeDOFv1
-    sap=controlPlot(n,r,s,idx,1)
-  elseif c.m.model==:ThreeDOFv2
-    sap=statePlot(n,r,s,idx,6)
-  end
+
+  sap=statePlot(n,r,s,idx,6)
   vp=statePlot(n,r,s,idx,3)
   rp=statePlot(n,r,s,idx,4)
   vt=vtPlot(n,r,s,pa,c,idx)
@@ -525,7 +527,30 @@ function mainPath(n,r,s,c,pa,idx)
   if s.MPC; tp=tPlot(n,r,s,idx); else; tp=plot(0,leg=:false); end
   l = @layout [a{0.3w} [grid(2,2)
                         b{0.2h}]]
-  mainS=plot(pp,sap,vt,pz,rp,tp,layout=l,size=(1800,1200));
+  mainS=plot(pp,sap,vt,pz,rp,tp,layout=l,size=(s.s1,s.s2));
+
+  return mainS
+end
+
+"""
+mainS=mainPath2(n,r,s,c,pa,r.eval_num)
+mainS=mainPath2(n,r,s,c,pa,idx)
+--------------------------------------------------------------------------------------\n
+Author: Huckleberry Febbo, Graduate Student, University of Michigan
+Date Create: 4/27/2017, Last Modified: 4/27/2017 \n
+--------------------------------------------------------------------------------------\n
+"""
+function mainPath2(n,r,s,c,pa,idx)
+
+  sap=statePlot(n,r,s,idx,6);plot!(leg=:topleft)
+  vp=statePlot(n,r,s,idx,3);plot!(leg=:topleft)
+  vt=vtPlot(n,r,s,pa,c,idx);plot!(leg=:bottomleft)
+  pz=pSimPath(n,r,s,c,idx;(:zoom=>true));plot!(leg=:topleft)
+  if s.MPC; tp=tPlot(n,r,s,idx);plot!(leg=:topright) else; tp=plot(0,leg=:false);plot!(leg=:topright) end
+
+  l=@layout([a{0.6w} [b;c]; d{0.17h}])
+
+  mainS=plot(pz,vt,sap,tp,layout=l,size=(s.s1,s.s2));
 
   return mainS
 end
@@ -538,7 +563,11 @@ Date Create: 4/13/2017, Last Modified: 4/13/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 
-function mainSimPath(n,r,s,c,pa)
+function mainSimPath(n,r,s,c,pa;kwargs...)
+  kw = Dict(kwargs);
+  if !haskey(kw,:simple);simple=false;
+  else; simple=get(kw,:simple,0);
+  end
 
   tt=zeros(r.eval_num);
   for ii=1:r.eval_num-1
@@ -548,9 +577,13 @@ function mainSimPath(n,r,s,c,pa)
 
   if r.eval_num>2;
      anim = @animate for ii in 1:length(r.dfs)
-      mainPath(n,r,s,c,pa,ii);
+      if !simple
+        mainPath(n,r,s,c,pa,ii);
+      else
+        mainPath2(n,r,s,c,pa,ii);
+      end
     end
-    gif(anim, string(r.results_dir,"mainSimPath.gif"), fps = Int(ceil(1/t_ave)));
+    gif(anim, string(r.results_dir,"mainSimPath.gif"), fps=Int(ceil(1/t_ave)));
     cd(r.results_dir)
       run(`ffmpeg -f gif -i mainSimPath.gif RESULT.mp4`)
     cd(r.main_dir)
