@@ -1,6 +1,9 @@
 module PrettyPlots
 
-#include("utils.jl")
+using Colors
+using DataFrames
+
+include("utils.jl")
 include("NLOptControl_plots.jl")
 include("VehicleModels_plots.jl")
 
@@ -12,6 +15,8 @@ export
     # utils.jl
     minDF,
     maxDF,
+    plotSettings,
+    _plot_defaults,
 
     # NLOptControl.jl plots
     statePlot,

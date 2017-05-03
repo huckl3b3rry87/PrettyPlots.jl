@@ -55,6 +55,10 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
   else;smallMarkers=get(kw,:smallMarkers,0);
   end
 
+  # check to see if user wants to crash
+  if !haskey(kw,:obstacleMiss);obstacleMiss=false;
+  else;obstacleMiss=get(kw,:obstacleMiss,0);
+  end
 
   if basic
     s=Settings();
@@ -130,6 +134,9 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
             scatter!((X,Y),marker=(:circle,:red,s.ms2,1.0),label="Obstacles")
           end
           plot!(pts,line=(s.lw1,0.0,:solid,:red),fill=(0,1.0,:red),leg=true,label="")
+          if obstacleMiss && i>8
+            annotate!(X,Y+5,text("obstacle not seen!"),14,:red,:center)
+          end
         end
       end
     end
@@ -215,7 +222,6 @@ function vehiclePlot(n,r,s,c,idx,args...;kwargs...)
     end
   end
   scatter!((P2[1,:]+X_v,P2[2,:]+Y_v),ms=0,fill=(0,1,:black),leg=true,grid=true,label="")
-  #scatter!((P2[1,:]+X_v,P2[2,:]+Y_v),fill=(0,1,:black),leg=true,grid=true,label="")
 
   if !zoom && !setLims
     if s.MPC  # TODO push this to a higher level
@@ -460,11 +466,16 @@ function posPlot(n,r,s,c,idx;kwargs...)
   else;smallMarkers=get(kw,:smallMarkers,0);
   end
 
+  # check to see if user wants to crash
+  if !haskey(kw,:obstacleMiss);obstacleMiss=false;
+  else;obstacleMiss=get(kw,:obstacleMiss,0);
+  end
+
   if !isempty(c.t.X); pp=trackPlot(c;(:smallMarkers=>smallMarkers)); else pp=plot(0,leg=:false); end  # track
   if !isempty(c.m.Lr); pp=lidarPlot(r,s,c,idx,pp;(:append=>true)); end  # lidar
 
   pp=statePlot(n,r,s,idx,1,2,pp;(:lims=>false),(:append=>true)); # vehicle trajectory
-  pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true),(:smallMarkers=>smallMarkers));               # obstacles
+  pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true),(:smallMarkers=>smallMarkers),(:obstacleMiss=>obstacleMiss));               # obstacles
   pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true),(:zoom=>zoom),(:setLims=>setLims),(:smallMarkers=>smallMarkers));  # vehicle
 
   if !s.simulate savefig(string(r.results_dir,"pp.",s.format)) end
@@ -507,8 +518,8 @@ function mainPlot(n,r,s,c,pa,idx;kwargs...)
     sap=statePlot(n,r,s,idx,6);plot!(leg=:topleft)
     vp=statePlot(n,r,s,idx,3);plot!(leg=:topleft)
     vt=vtPlot(n,r,s,pa,c,idx);plot!(leg=:bottomleft)
-    pp=posPlot(n,r,s,c,idx;(:setLims=>true),(:smallMarkers=>true));plot!(leg=false);
-    pz=posPlot(n,r,s,c,idx;(:zoom=>true));plot!(leg=:topleft)
+    pp=posPlot(n,r,s,c,idx;(:setLims=>true),(:smallMarkers=>true),(:obstacleMiss=>false));plot!(leg=false);
+    pz=posPlot(n,r,s,c,idx;(:zoom=>true),(:obstacleMiss=>false));plot!(leg=:topleft)
     if s.MPC; tp=tPlot(n,r,s,idx);plot!(leg=:topright) else; tp=plot(0,leg=:false);plot!(leg=:topright) end
     l=@layout([[a;
                 b{0.2h}] [c;d;e]])

@@ -23,7 +23,7 @@ function allPlots(n::NLOpt,r::Result,s::Settings,idx::Int64)
   ctp = [controlPlot(n,r,s,idx,ctr) for ctr in 1:n.numControls];
   all = [stp;ctp];
   h = plot(all...,size=(s.s1,s.s1));
-  if !s.simulate; savefig(string(r.results_dir,"main.",s.format)) end
+  if !s.simulate; savefig(string(r.results_dir,"main.",_plot_defaults[:save])) end
   return h
 end
 
@@ -34,25 +34,25 @@ stp=statePlot(n,r,s,idx,st;(:legend=>"test1"));
 stp=statePlot(n,r,s,idx,st,stp;(:append=>true));
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 2/10/2017, Last Modified: 3/26/2017 \n
+Date Create: 2/10/2017, Last Modified: 5/2/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function statePlot(n::NLOpt,r::Result,s::Settings,idx::Int64,st::Int64,args...;kwargs...)
   kw = Dict(kwargs);
 
   # check to se if user would like to add to an existing plot
-  if !haskey(kw,:append); kw_ = Dict(:append => false); append = get(kw_,:append,0);
+  if !haskey(kw,:append); append=false;
   else; append = get(kw,:append,0);
   end
   if !append; stp=plot(0,leg=:false); else stp=args[1]; end
 
   # check to see if user would like to plot limits
-  if !haskey(kw,:lims); kw_ = Dict(:lims => true); lims = get(kw_,:lims,0);
+  if !haskey(kw,:lims); lims=true;
   else; lims = get(kw,:lims,0);
   end
 
   # check to see if user would like to label legend
-  if !haskey(kw,:legend); kw_ = Dict(:legend => ""); legend_string = get(kw_,:legend,0);
+  if !haskey(kw,:legend); legend = "";
   else; legend_string = get(kw,:legend,0);
   end
 
@@ -91,7 +91,7 @@ function statePlot(n::NLOpt,r::Result,s::Settings,idx::Int64,st::Int64,args...;k
 		temp = [r.dfs_plant[jj][:t] for jj in 1:idx];
 		time=[idx for tempM in temp for idx=tempM];
 
-    plot!(time,vals,w=s.lw2,label=string(legend_string,"plant"));
+    plot!(time,vals,line=_plot_defaults[:mpc_lines][1],label=string(legend_string,"plant"));
   end
   adjust_axis(xlims(),ylims());
 	xlims!(t_vec[1],t_vec[end]);
@@ -155,7 +155,7 @@ function statePlot(n::NLOpt,r::Result,s::Settings,idx::Int64,st1::Int64,st2::Int
 		temp = [r.dfs_plant[jj][n.state.name[st2]] for jj in 1:idx];
 		vals2=[idx for tempM in temp for idx=tempM];
 
-		plot!(vals1,vals2,w=s.lw2,label=string(legend_string,"plant"));
+		plot!(vals1,vals2,line=_plot_defaults[:mpc_lines][1],label=string(legend_string,"plant"));
   end
   adjust_axis(xlims(),ylims());
   plot!(size=(s.s1,s.s1));
@@ -218,7 +218,7 @@ function controlPlot(n::NLOpt,r::Result,s::Settings,idx::Int64,ctr::Int64,args..
 		temp = [r.dfs_plant[jj][:t] for jj in 1:idx];
 		time=[idx for tempM in temp for idx=tempM];
 
-		plot!(time,vals,w=s.lw2,label=string(legend_string,"plant"));
+		plot!(time,vals,line=_plot_defaults[:mpc_lines][1],label=string(legend_string,"plant"));
   end
   adjust_axis(xlims(),ylims());
 	xlims!(t_vec[1],t_vec[end]);
@@ -266,6 +266,7 @@ function tPlot(n::NLOpt,r::Result,s::Settings,idx::Int64,args...;kwargs...);
 	plot!(1:length(T_solve),n.mpc.tex*ones(length(T_solve)), w=s.lw1, leg=:true,label="real-time threshhold",leg=:topright)
 
 	ylims!((0,n.mpc.tex*1.2))
+  xlims!((0,length(T_solve)))
 	yaxis!("Optimization Time (s)")
 	xaxis!("Evaluation Number")
   plot!(size=(s.s1,s.s1));
