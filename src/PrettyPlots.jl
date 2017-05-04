@@ -3,20 +3,17 @@ module PrettyPlots
 using Colors
 using DataFrames
 
-include("utils.jl")
+include("PrettyUtils.jl")
 include("NLOptControl_plots.jl")
 include("VehicleModels_plots.jl")
 
-#using .utils
-using .NLOptControl_plots
-using .VehicleModels_plots
-
 export
-    # utils.jl
+    # PrettyUtils.jl
     minDF,
     maxDF,
     plotSettings,
-    _plot_defaults,
+    _pretty_defaults,
+    currentSettings,
 
     # NLOptControl.jl plots
     statePlot,
@@ -25,7 +22,7 @@ export
     adjust_axis,
     tPlot,
 
-    # OCP.jl & VehicleModel.jl plots
+    # MAVs.jl & VehicleModel.jl plots
     obstaclePlot,
     trackPlot,
     mainSim,

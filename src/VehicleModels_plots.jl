@@ -1,35 +1,22 @@
-module VehicleModels_plots
-
 using NLOptControl
 using VehicleModels
 using Plots
-
-include("NLOptControl_plots.jl")
-using .NLOptControl_plots
-
-export
-      obstaclePlot,
-      trackPlot,
-      mainSim,
-      posterP,
-      posPlot,
-      vtPlot
 
 """
 # to visualize the current obstacle in the field
 obstaclePlot(n,c)
 
 # to run it after a single optimization
-pp=obstaclePlot(n,r,s,c,1);
+pp=obstaclePlot(n,r,c,1);
 
 # to create a new plot
-pp=obstaclePlot(n,r,s,c,idx);
+pp=obstaclePlot(n,r,c,idx);
 
 # to add to an exsting position plot
-pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true));
+pp=obstaclePlot(n,r,c,idx,pp;(:append=>true));
 
 # posterPlot
-pp=obstaclePlot(n,r,s,c,ii,pp;(:append=>true),(:posterPlot=>true)); # add obstacles
+pp=obstaclePlot(n,r,c,ii,pp;(:append=>true),(:posterPlot=>true)); # add obstacles
 
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
@@ -37,7 +24,7 @@ Date Create: 3/11/2017, Last Modified: 4/3/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 
-function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
+function obstaclePlot(n,r,c,idx,args...;kwargs...)
   kw = Dict(kwargs);
 
   # check to see if is a basic plot
@@ -73,9 +60,9 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
           y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*tc;
           pts = collect(zip(x, y))
           if i==1
-            scatter!((c.o.X0[i],c.o.Y0[i]),marker=(:circle,:red,s.ms2,1),label="Obstacles")
+            scatter!((c.o.X0[i],c.o.Y0[i]),marker=(:circle,:red,4.0,1),label="Obstacles")
           end
-          plot!(pts,line=(s.lw1,0.0,:solid,:red),fill=(0, 1, :red),leg=true,label="")
+          plot!(pts,line=(4.0,0.0,:solid,:red),fill=(0, 1, :red),leg=true,label="")
       end
     end
   else
@@ -94,9 +81,9 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
         x += c.g.x_ref;  y += c.g.y_ref;
         pts = collect(zip(x, y));
         if !smallMarkers  #TODO get ride of this-> will not be a legend for this case
-          scatter!((c.g.x_ref,c.g.y_ref),marker=(:circle,:green,s.ms2,1.0),label="Goal")
+          scatter!((c.g.x_ref,c.g.y_ref),marker=_pretty_defaults[:goal_marker],label="Goal")
         end
-        plot!(pts,line=(s.lw1,1,:solid,:green),fill=(0,1,:green),leg=true,label="")
+        plot!(pts,line=_pretty_defaults[:goal_line],fill=_pretty_defaults[:goal_fill],leg=true,label="")
       end
     end
 
@@ -105,7 +92,7 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
         # create an ellipse
         pts = Plots.partialcircle(0,2π,100,c.o.A[i])
         x, y = Plots.unzip(pts)
-        if s.MPC
+        if _pretty_defaults[:plant]
           x += c.o.X0[i] + c.o.s_x[i]*r.dfs_plant[idx][:t][end];
           y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*r.dfs_plant[idx][:t][end];
         else
@@ -113,27 +100,26 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
             tc=r.dfs[idx][:t][end];
           else
             tc=0;
-            warn("\n Obstacles set to inital condition for current frame!! \n")
+            if idx!=1; warn("\n Obstacles set to inital condition for current frame. \n") end
           end
           x += c.o.X0[i] + c.o.s_x[i]*tc;
           y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*tc;
         end
-        pts = collect(zip(x, y))
+        pts=collect(zip(x, y))
         X=c.o.X0[i] + c.o.s_x[i]*r.dfs_plant[idx][:t][end]
         Y=c.o.Y0[i] + c.o.s_y[i]*r.dfs_plant[idx][:t][end];
         if posterPlot
           shade=idx/r.eval_num;
-          if idx==r.eval_num && i==4  # NOTE either the obstacles increase in size or we do not get a legend, so this is a fix for now ! -> making it an obstacle that does not appear on the plot at that time
-            plot!(pts,line=(s.lw1,shade,:solid,:red),fill=(0,shade,:red),leg=true,label="Obstacles")
-          else
-            plot!(pts,line=(s.lw1,0.0,:solid,:red),fill=(0,shade,:red),leg=true,label="")
+          if idx==r.eval_num && i==1
+            scatter!((X,Y),marker=_pretty_defaults[:obstacle_marker],label="Obstacles")
           end
+          plot!(pts,line=_pretty_defaults[:obstacle_line],fill=(0,shade,:red),leg=true,label="")
           annotate!(X,Y,text(string(idx*c.m.tex,"s"),10,:black,:center))
         else
-          if i==1 &&!smallMarkers
-            scatter!((X,Y),marker=(:circle,:red,s.ms2,1.0),label="Obstacles")
+          if i==1 && !smallMarkers
+            scatter!((X,Y),marker=_pretty_defaults[:obstacle_marker],label="Obstacles")
           end
-          plot!(pts,line=(s.lw1,0.0,:solid,:red),fill=(0,1.0,:red),leg=true,label="")
+          plot!(pts,line=_pretty_defaults[:obstacle_line],fill=_pretty_defaults[:obstacle_fill],leg=true,label="") #line=(3.0,0.0,:solid,:red)
           if obstacleMiss && i>8
             annotate!(X,Y+5,text("obstacle not seen!"),14,:red,:center)
           end
@@ -143,7 +129,7 @@ function obstaclePlot(n,r,s,c,idx,args...;kwargs...)
 
     xaxis!(n.state.description[1]);
     yaxis!(n.state.description[2]);
-    if !s.simulate savefig(string(r.results_dir,"/",n.state.name[1],"_vs_",n.state.name[2],".",s.format)); end
+    if !_pretty_defaults[:simulate] savefig(string(r.results_dir,"/",n.state.name[1],"_vs_",n.state.name[2],".",_pretty_defaults[:format])); end
   end
   return pp
 end
@@ -158,14 +144,14 @@ img=Images.load(Pkg.dir("PrettyPlots/src/humvee.png"));
 plot(img)
 =#
 """
-pp=vehiclePlot(n,r,s,c,idx);
-pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true));
+pp=vehiclePlot(n,r,c,idx);
+pp=vehiclePlot(n,r,c,idx,pp;(:append=>true));
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 4/4/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function vehiclePlot(n,r,s,c,idx,args...;kwargs...)
+function vehiclePlot(n,r,c,idx,args...;kwargs...)
   kw = Dict(kwargs);
 
   # check to see if user wants to zoom
@@ -194,18 +180,17 @@ function vehiclePlot(n,r,s,c,idx,args...;kwargs...)
   else;smallMarkers=get(kw,:smallMarkers,0);
   end
 
-  # contants
-  w=1.9; #width TODO move these to vehicle parameters
-  h=3.3; #height
+  w=_pretty_defaults[:vehicle_width]; h=_pretty_defaults[:vehicle_length]
   XQ = [-w/2 w/2 w/2 -w/2 -w/2];
   YQ = [h/2 h/2 -h/2 -h/2 h/2];
 
   # plot the vehicle
-  if s.MPC
+  if _pretty_defaults[:plant]
     X_v = r.dfs_plant[idx][:x][end]  # using the end of the simulated data from the vehicle model
     Y_v = r.dfs_plant[idx][:y][end]
     PSI_v = r.dfs_plant[idx][:psi][end]-pi/2
   else
+   #TODO condider eliminating option to plot mpc only
     X_v = r.dfs[idx][:x][1] # start at begining
     Y_v = r.dfs[idx][:y][1]
     PSI_v = r.dfs[idx][:psi][1]-pi/2
@@ -218,13 +203,13 @@ function vehiclePlot(n,r,s,c,idx,args...;kwargs...)
   P2 = R * P;
   if !posterPlot || idx==r.eval_num
     if !smallMarkers # for legend
-      scatter!((X_v,Y_v),marker=(:black,:rect,s.ms1,0.8,stroke(3,:black)), grid=true,label="Vehicle")
+      scatter!((X_v,Y_v),marker=_pretty_defaults[:vehicle_marker], grid=true,label="Vehicle")
     end
   end
-  scatter!((P2[1,:]+X_v,P2[2,:]+Y_v),ms=0,fill=(0,1,:black),leg=true,grid=true,label="")
+  scatter!((P2[1,:]+X_v,P2[2,:]+Y_v),ms=0,fill=_pretty_defaults[:vehicle_fill],leg=true,grid=true,label="")
 
   if !zoom && !setLims
-    if s.MPC  # TODO push this to a higher level
+    if _pretty_defaults[:plant]  # TODO push this to a higher level
       xL=minDF(r.dfs_plant,:x);xU=maxDF(r.dfs_plant,:x);
       yL=minDF(r.dfs_plant,:y);yU=maxDF(r.dfs_plant,:y);
     else
@@ -250,38 +235,38 @@ function vehiclePlot(n,r,s,c,idx,args...;kwargs...)
     ylims!(c.m.Ylims[1],c.m.Ylims[2]);
   end
 
-  if !s.simulate; savefig(string(r.results_dir,"x_vs_y",".",s.format)); end
+  if !_pretty_defaults[:simulate]; savefig(string(r.results_dir,"x_vs_y",".",_pretty_defaults[:format])); end
   return pp
 end
 """
-vt=vtPlot(n,r,s,pa,c,idx)
+vt=vtPlot(n,r,pa,c,idx)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 3/11/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function vtPlot(n::NLOpt,r::Result,s::Settings,pa::VehicleModels.Vpara,c,idx::Int64)
+function vtPlot(n::NLOpt,r::Result,pa::VehicleModels.Vpara,c,idx::Int64)
 	@unpack_Vpara pa
 
-  if !s.MPC && r.dfs[idx]!=nothing
-    t_vec=linspace(0.0,max(5,ceil(r.dfs[end][:t][end]/1)*1),s.L);
+  if r.dfs[idx]!=nothing
+    t_vec=linspace(0.0,max(5,ceil(r.dfs[end][:t][end]/1)*1),_pretty_defaults[:L]);
   else
-    t_vec=linspace(0,max(5,ceil(r.dfs_plant[end][:t][end]/1)*1),s.L);
+    t_vec=linspace(0.0,max(5,ceil(r.dfs_plant[end][:t][end]/1)*1),_pretty_defaults[:L]);
   end
 
-	vt=plot(t_vec,Fz_min*ones(s.L,1),line=(s.lw2),label="min")
+	vt=plot(t_vec,Fz_min*ones(_pretty_defaults[:L],1),line=_pretty_defaults[:limit_lines][2],label="min")
 
-  if r.dfs[idx]!=nothing && !s.plantOnly
+  if r.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
     V=r.dfs[idx][:v];R=r.dfs[idx][:r];SA=r.dfs[idx][:sa];
     if c.m.model!=:ThreeDOFv1
       Ax=r.dfs[idx][:ax]; U=r.dfs[idx][:ux];
     else # constain speed (the model is not optimizing speed)
       U=c.m.UX*ones(length(V)); Ax=zeros(length(V));
     end
-    plot!(r.dfs[idx][:t],@FZ_RL(),w=s.lw1,label="RL-mpc");
-    plot!(r.dfs[idx][:t],@FZ_RR(),w=s.lw1,label="RR-mpc");
+    plot!(r.dfs[idx][:t],@FZ_RL(),line=_pretty_defaults[:mpc_lines][1],label="RL-mpc");
+    plot!(r.dfs[idx][:t],@FZ_RR(),line=_pretty_defaults[:mpc_lines][2],label="RR-mpc");
   end
-  if s.MPC
+  if _pretty_defaults[:plant]
     temp = [r.dfs_plant[jj][:v] for jj in 1:idx]; # V
     V=[idx for tempM in temp for idx=tempM];
 
@@ -305,28 +290,28 @@ function vtPlot(n::NLOpt,r::Result,s::Settings,pa::VehicleModels.Vpara,c,idx::In
     temp = [r.dfs_plant[jj][:t] for jj in 1:idx];
     time=[idx for tempM in temp for idx=tempM];
 
-    plot!(time,@FZ_RL(),w=s.lw2,label="RL-plant");
-    plot!(time,@FZ_RR(),w=s.lw2,label="RR-plant");
+    plot!(time,@FZ_RL(),line=_pretty_defaults[:plant_lines][1],label="RL-plant");
+    plot!(time,@FZ_RR(),line=_pretty_defaults[:plant_lines][2],label="RR-plant");
   end
-  plot!(size=(s.s1,s.s1));
+  plot!(size=_pretty_defaults[:size]);
 	adjust_axis(xlims(),ylims());
   xlims!(t_vec[1],t_vec[end]);
-  ylims!(500,12000)
+  ylims!(_pretty_defaults[:tire_force_lims])
 	title!("Vertical Tire Forces"); yaxis!("Force (N)"); xaxis!("time (s)")
-	if !s.simulate savefig(string(r.results_dir,"vt.",s.format)) end
+	if !_pretty_defaults[:simulate] savefig(string(r.results_dir,"vt.",_pretty_defaults[:format])) end
   return vt
 end
 
 """
-axp=axLimsPlot(n,r,s,pa,idx)
-axp=axLimsPlot(n,r,s,pa,idx,axp;(:append=>true))
+axp=axLimsPlot(n,r,pa,idx)
+axp=axLimsPlot(n,r,pa,idx,axp;(:append=>true))
 # this plot adds the nonlinear limits on acceleration to the plot
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 3/11/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function axLimsPlot(n::NLOpt,r::Result,s::Settings,pa::VehicleModels.Vpara,idx::Int64,args...;kwargs...)
+function axLimsPlot(n::NLOpt,r::Result,pa::VehicleModels.Vpara,idx::Int64,args...;kwargs...)
   kw = Dict(kwargs);
   if !haskey(kw,:append); kw_ = Dict(:append => false); append = get(kw_,:append,0);
   else; append = get(kw,:append,0);
@@ -335,18 +320,18 @@ function axLimsPlot(n::NLOpt,r::Result,s::Settings,pa::VehicleModels.Vpara,idx::
 
   @unpack_Vpara pa
 
-  if !s.MPC && r.dfs[idx]!=nothing && !s.plantOnly
-    t_vec=linspace(0.0,max(5,ceil(r.dfs[end][:t][end]/1)*1),s.L);
+  if !_pretty_defaults[:plant] && r.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
+    t_vec=linspace(0.0,max(5,ceil(r.dfs[end][:t][end]/1)*1),_pretty_defaults[:L]);
   else
-    t_vec=linspace(0,max(5,ceil(r.dfs_plant[end][:t][end]/1)*1),s.L);
+    t_vec=linspace(0,max(5,ceil(r.dfs_plant[end][:t][end]/1)*1),_pretty_defaults[:L]);
   end
 
-  if r.dfs[idx]!=nothing && !s.plantOnly
+  if r.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
     U = r.dfs[idx][:ux]
-    plot!(r.dfs[idx][:t],@Ax_min(),w=s.lw1,label="min-mpc");
-    plot!(r.dfs[idx][:t],@Ax_max(),w=s.lw1,label="max-mpc");
+    plot!(r.dfs[idx][:t],@Ax_max(),line=_pretty_defaults[:limit_lines][2],label="max-mpc");
+    plot!(r.dfs[idx][:t],@Ax_min(),line=_pretty_defaults[:limit_lines][1],label="min-mpc");
   end
-  if s.MPC
+  if _pretty_defaults[:plant]
     temp = [r.dfs_plant[jj][:ux] for jj in 1:idx]; # ux
     U=[idx for tempM in temp for idx=tempM];
 
@@ -354,12 +339,12 @@ function axLimsPlot(n::NLOpt,r::Result,s::Settings,pa::VehicleModels.Vpara,idx::
     temp = [r.dfs_plant[jj][:t] for jj in 1:idx];
     time=[idx for tempM in temp for idx=tempM];
 
-    plot!(time,@Ax_min(),w=s.lw2,label="min-plant");
-    plot!(time,@Ax_max(),w=s.lw2,label="max-plant");
+    plot!(time,@Ax_max(),line=_pretty_defaults[:limit_lines][4],label="max-plant");
+    plot!(time,@Ax_min(),line=_pretty_defaults[:limit_lines][3],label="min-plant");
   end
-  ylims!(-5,2)
-  plot!(size=(s.s1,s.s1));
-  if !s.simulate savefig(string(r.results_dir,"axp.",s.format)) end
+  ylims!(_pretty_defaults[:ax_lims]);
+  plot!(size=_pretty_defaults[:size]);
+  if !_pretty_defaults[:simulate] savefig(string(r.results_dir,"axp.",_pretty_defaults[:format])) end
   return axp
 end
 
@@ -400,7 +385,7 @@ function trackPlot(c,args...;kwargs...)
     Y=ff.(X);
   end
 
-  if !smallMarkers; L=s.lw1*10; else L=s.lw1; end
+  if !smallMarkers; L=40; else L=4; end
 
   plot!(X,Y,label="Road",line=(L,0.3,:solid,:black))
   return pp
@@ -408,14 +393,14 @@ end
 
 """
 
-pp=lidarPlot(r,s,c,idx);
-pp=lidarPlot(r,s,c,idx,pp;(:append=>true));
+pp=lidarPlot(r,c,idx);
+pp=lidarPlot(r,c,idx,pp;(:append=>true));
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 4/3/2017, Last Modified: 4/3/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function lidarPlot(r,s,c,idx,args...;kwargs...)
+function lidarPlot(r,c,idx,args...;kwargs...)
   kw = Dict(kwargs);
 
   # check to see if user would like to add to an existing plot
@@ -425,7 +410,7 @@ function lidarPlot(r,s,c,idx,args...;kwargs...)
   if !append; pp=plot(0,leg=:false); else pp=args[1]; end
 
   # plot the LiDAR
-  if s.MPC
+  if _pretty_defaults[:plant]
     X_v = r.dfs_plant[idx][:x][1]  # using the begining of the simulated data from the vehicle model
     Y_v = r.dfs_plant[idx][:y][1]
     PSI_v = r.dfs_plant[idx][:psi][1]-pi/2
@@ -439,19 +424,19 @@ function lidarPlot(r,s,c,idx,args...;kwargs...)
   x, y = Plots.unzip(pts);
   x += X_v;  y += Y_v;
   pts = collect(zip(x, y));
-  plot!(pts, line=(s.lw1,0.2,:solid,:yellow),fill=(0, 0.2,:yellow),leg=true,label="LiDAR Range")
+  plot!(pts,line=_pretty_defaults[:lidar_line],fill=_pretty_defaults[:lidar_fill],leg=true,label="LiDAR Range")
   return pp
 end
 """
 # to plot the second solution
-pp=posPlot(n,r,s,c,2)
-pp=posPlot(n,r,s,c,idx)
+pp=posPlot(n,r,c,2)
+pp=posPlot(n,r,c,idx)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/28/2017, Last Modified: 5/1/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function posPlot(n,r,s,c,idx;kwargs...)
+function posPlot(n,r,c,idx;kwargs...)
   kw = Dict(kwargs);
   if !haskey(kw,:zoom); zoom=false;
   else; zoom=get(kw,:zoom,0);
@@ -472,69 +457,69 @@ function posPlot(n,r,s,c,idx;kwargs...)
   end
 
   if !isempty(c.t.X); pp=trackPlot(c;(:smallMarkers=>smallMarkers)); else pp=plot(0,leg=:false); end  # track
-  if !isempty(c.m.Lr); pp=lidarPlot(r,s,c,idx,pp;(:append=>true)); end  # lidar
+  if !isempty(c.m.Lr); pp=lidarPlot(r,c,idx,pp;(:append=>true)); end  # lidar
 
-  pp=statePlot(n,r,s,idx,1,2,pp;(:lims=>false),(:append=>true)); # vehicle trajectory
-  pp=obstaclePlot(n,r,s,c,idx,pp;(:append=>true),(:smallMarkers=>smallMarkers),(:obstacleMiss=>obstacleMiss));               # obstacles
-  pp=vehiclePlot(n,r,s,c,idx,pp;(:append=>true),(:zoom=>zoom),(:setLims=>setLims),(:smallMarkers=>smallMarkers));  # vehicle
+  pp=statePlot(n,r,idx,1,2,pp;(:lims=>false),(:append=>true)); # vehicle trajectory
+  pp=obstaclePlot(n,r,c,idx,pp;(:append=>true),(:smallMarkers=>smallMarkers),(:obstacleMiss=>obstacleMiss));               # obstacles
+  pp=vehiclePlot(n,r,c,idx,pp;(:append=>true),(:zoom=>zoom),(:setLims=>setLims),(:smallMarkers=>smallMarkers));  # vehicle
 
-  if !s.simulate savefig(string(r.results_dir,"pp.",s.format)) end
+  if !_pretty_defaults[:simulate] savefig(string(r.results_dir,"pp.",_pretty_defaults[:format])) end
   return pp
 end
 
 """
-main=mainPlot(n,r,s,c,pa,idx;kwargs...)
+main=mainPlot(n,r,c,pa,idx;kwargs...)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 5/1/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function mainPlot(n,r,s,c,pa,idx;kwargs...)
+function mainPlot(n,r,c,pa,idx;kwargs...)
   kw = Dict(kwargs);
   if !haskey(kw,:mode);error("select a mode for the simulation \n")
   else; mode=get(kw,:mode,0);
   end
 
   if mode==:path1
-    sap=statePlot(n,r,s,idx,6)
-    vp=statePlot(n,r,s,idx,3)
-    rp=statePlot(n,r,s,idx,4)
-    vt=vtPlot(n,r,s,pa,c,idx)
-    pp=posPlot(n,r,s,c,idx)
-    pz=posPlot(n,r,s,c,idx;(:zoom=>true))
-    if s.MPC; tp=tPlot(n,r,s,idx); else; tp=plot(0,leg=:false); end
+    sap=statePlot(n,r,idx,6)
+    vp=statePlot(n,r,idx,3)
+    rp=statePlot(n,r,idx,4)
+    vt=vtPlot(n,r,pa,c,idx)
+    pp=posPlot(n,r,c,idx)
+    pz=posPlot(n,r,c,idx;(:zoom=>true))
+    if _pretty_defaults[:plant]; tp=tPlot(n,r,idx); else; tp=plot(0,leg=:false); end
     l = @layout [a{0.3w} [grid(2,2)
                           b{0.2h}]]
-    mainS=plot(pp,sap,vt,pz,rp,tp,layout=l,size=(s.s1,s.s2));
+    mainS=plot(pp,sap,vt,pz,rp,tp,layout=l,size=_pretty_defaults[:size]);
   elseif mode==:path2
-    sap=statePlot(n,r,s,idx,6);plot!(leg=:topleft)
-    vp=statePlot(n,r,s,idx,3);plot!(leg=:topleft)
-    vt=vtPlot(n,r,s,pa,c,idx);plot!(leg=:bottomleft)
-    pz=posPlot(n,r,s,c,idx;(:zoom=>true));plot!(leg=:topleft)
-    if s.MPC; tp=tPlot(n,r,s,idx);plot!(leg=:topright) else; tp=plot(0,leg=:false);plot!(leg=:topright) end
+    sap=statePlot(n,r,idx,6);plot!(leg=:topleft)
+    vp=statePlot(n,r,idx,3);plot!(leg=:topleft)
+    vt=vtPlot(n,r,pa,c,idx);plot!(leg=:bottomleft)
+    pz=posPlot(n,r,c,idx;(:zoom=>true));plot!(leg=:topleft)
+    if _pretty_defaults[:plant]; tp=tPlot(n,r,idx);plot!(leg=:topright) else; tp=plot(0,leg=:false);plot!(leg=:topright) end
     l=@layout([a{0.6w} [b;c]; d{0.17h}])
-    mainS=plot(pz,vt,sap,tp,layout=l,size=(s.s1,s.s2));
+    mainS=plot(pz,vt,sap,tp,layout=l,size=_pretty_defaults[:size]);
   elseif mode==:path3
-    sap=statePlot(n,r,s,idx,6);plot!(leg=:topleft)
-    vp=statePlot(n,r,s,idx,3);plot!(leg=:topleft)
-    vt=vtPlot(n,r,s,pa,c,idx);plot!(leg=:bottomleft)
-    pp=posPlot(n,r,s,c,idx;(:setLims=>true),(:smallMarkers=>true),(:obstacleMiss=>false));plot!(leg=false);
-    pz=posPlot(n,r,s,c,idx;(:zoom=>true),(:obstacleMiss=>false));plot!(leg=:topleft)
-    if s.MPC; tp=tPlot(n,r,s,idx);plot!(leg=:topright) else; tp=plot(0,leg=:false);plot!(leg=:topright) end
+    sap=statePlot(n,r,idx,6);plot!(leg=:topleft)
+    vp=statePlot(n,r,idx,3);plot!(leg=:topleft)
+    vt=vtPlot(n,r,pa,c,idx);plot!(leg=:bottomleft)
+    pp=posPlot(n,r,c,idx;(:setLims=>true),(:smallMarkers=>true),(:obstacleMiss=>false));plot!(leg=false);
+    pz=posPlot(n,r,c,idx;(:zoom=>true),(:obstacleMiss=>false));plot!(leg=:topleft)
+    if _pretty_defaults[:plant]; tp=tPlot(n,r,idx);plot!(leg=:topright) else; tp=plot(0,leg=:false);plot!(leg=:topright) end
     l=@layout([[a;
                 b{0.2h}] [c;d;e]])
-    mainS=plot(pz,pp,vt,sap,tp,layout=l,size=(s.s1,s.s2));
+    mainS=plot(pz,pp,vt,sap,tp,layout=l,size=_pretty_defaults[:size]);
   elseif mode==:open1
-    sap=statePlot(n,r,s,idx,6);plot!(leg=:topleft)
-    longv=statePlot(n,r,s,idx,7);plot!(leg=:topleft)
-    axp=axLimsPlot(n,r,s,pa,idx);# add nonlinear acceleration limits
-    axp=statePlot(n,r,s,idx,8,axp;(:lims=>false),(:append=>true));plot!(leg=:bottomright);
-    pp=posPlot(n,r,s,c,idx;(:setLims=>true));plot!(leg=:topright);
-    if s.MPC; tp=tPlot(n,r,s,idx); else; tp=plot(0,leg=:false); end
-    vt=vtPlot(n,r,s,pa,c,idx)
+    sap=statePlot(n,r,idx,6);plot!(leg=:topleft)
+    longv=statePlot(n,r,idx,7);plot!(leg=:topleft)
+    axp=axLimsPlot(n,r,pa,idx);# add nonlinear acceleration limits
+    axp=statePlot(n,r,idx,8,axp;(:lims=>false),(:append=>true));plot!(leg=:bottomright);
+    pp=posPlot(n,r,c,idx;(:setLims=>true));plot!(leg=:topright);
+    if _pretty_defaults[:plant]; tp=tPlot(n,r,idx); else; tp=plot(0,leg=:false); end
+    vt=vtPlot(n,r,pa,c,idx)
     l = @layout [a{0.5w} [grid(2,2)
                           b{0.2h}]]
-    mainS=plot(pp,sap,vt,longv,axp,tp,layout=l,size=(s.s1,s.s2));
+    mainS=plot(pp,sap,vt,longv,axp,tp,layout=l,size=_pretty_defaults[:size]);
   end
 
   return mainS
@@ -542,14 +527,14 @@ end
 
 
 """
-mainSim(n,r,s,c,pa;(:mode=>:open1))
+mainSim(n,r,c,pa;(:mode=>:open1))
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 4/13/2017, Last Modified: 5/1/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 
-function mainSim(n,r,s,c,pa;kwargs...)
+function mainSim(n,r,c,pa;kwargs...)
   kw = Dict(kwargs);
   if !haskey(kw,:mode);error("select a mode for the simulation \n")
   else; mode=get(kw,:mode,0);
@@ -557,7 +542,7 @@ function mainSim(n,r,s,c,pa;kwargs...)
 
   if r.eval_num>2;
      anim = @animate for idx in 1:length(r.dfs)
-       mainPlot(n,r,s,c,pa,idx;(:mode=>mode))
+       mainPlot(n,r,c,pa,idx;(:mode=>mode))
     end
     cd(r.results_dir)
       gif(anim,"mainSim.gif",fps=Int(ceil(1/n.mpc.tex)));
@@ -565,8 +550,9 @@ function mainSim(n,r,s,c,pa;kwargs...)
     cd(r.main_dir)
   else
     warn("the evaluation number was not greater than 2. Cannot make animation. Plotting a static plot.")
-    s=Settings(;save=true,MPC=false,simulate=false,format=:png);
-    mainPlot(n,r,s,c,pa,2;(:mode=>mode))
+    warn("\n Modifying current plot settings! \n")
+    plotSettings(;(:simulate=>false),(:MPC=>false));
+    mainPlot(n,r,c,pa,2;(:mode=>mode))
   end
   nothing
 end
@@ -579,9 +565,9 @@ Date Create: 4/13/2017, Last Modified: 5/1/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 
-function pSim(n,r,s,c)
+function pSim(n,r,c)
   anim = @animate for ii in 1:length(r.dfs)
-    posPlot(n,r,s,c,ii);
+    posPlot(n,r,c,ii);
   end
   gif(anim, string(r.results_dir,"posSim.gif"), fps=Int(ceil(1/n.mpc.tex)) );
   nothing
@@ -596,35 +582,37 @@ Date Create: 4/13/2017, Last Modified: 4/13/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 
-function pSimGR(n,r,s,c)
+function pSimGR(n,r,c)
   ENV["GKS_WSTYPE"]="mov"
   gr(show=true)
   for ii in 1:length(r.dfs)
-    posPlot(n,r,s,c,ii);
+    posPlot(n,r,c,ii);
   end
 end
 
 """
 default(guidefont = font(17), tickfont = font(15), legendfont = font(12), titlefont = font(20))
 s=Settings(;save=true,MPC=true,simulate=false,format=:png,plantOnly=true);
-posterP(n,r,s,c,pa)
+posterP(n,r,c,pa)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 4/13/2017, Last Modified: 4/13/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 
-function posterP(n,r,s,c,pa)
+function posterP(n,r,c,pa)
+  warn("\n Modifying current plot settings! \n")
+  plotSettings(;(:simulate=>false),(:plant=>true),(:plantOnly=>true));
 
   # static plots for each frame
   idx=r.eval_num;
-  sap=statePlot(n,r,s,idx,6)
-  longv=statePlot(n,r,s,idx,7)
-  axp=axLimsPlot(n,r,s,pa,idx); # add nonlinear acceleration limits
-  axp=statePlot(n,r,s,idx,8,axp;(:lims=>false),(:append=>true));
-  pp=statePlot(n,r,s,idx,1,2;(:lims=>false));
-  if s.MPC; tp=tPlot(n,r,s,idx); else; tp=plot(0,leg=:false); end
-  vt=vtPlot(n,r,s,pa,c,idx)
+  sap=statePlot(n,r,idx,6)
+  longv=statePlot(n,r,idx,7)
+  axp=axLimsPlot(n,r,pa,idx); # add nonlinear acceleration limits
+  axp=statePlot(n,r,idx,8,axp;(:lims=>false),(:append=>true));
+  pp=statePlot(n,r,idx,1,2;(:lims=>false));
+  if _pretty_defaults[:plant]; tp=tPlot(n,r,idx); else; tp=plot(0,leg=:false); end
+  vt=vtPlot(n,r,pa,c,idx)
 
   # dynamic plots ( maybe only update every 5 frames or so)
   v=Vector(1:5:r.eval_num); if v[end]!=r.eval_num; append!(v,r.eval_num); end
@@ -639,21 +627,18 @@ function posterP(n,r,s,c,pa)
   		temp = [r.dfs_plant[jj][n.state.name[st2]] for jj in 1:r.eval_num];
   		vals2=[idx for tempM in temp for idx=tempM];
 
-  		pp=plot(vals1,vals2,w=s.lw2,label="Vehicle Trajectory");
+  		pp=plot(vals1,vals2,line=_pretty_defaults[:plant_lines][1],label="Vehicle Trajectory");
 
-      pp=obstaclePlot(n,r,s,c,ii,pp;(:append=>true),(:posterPlot=>true)); # add obstacles
-      pp=vehiclePlot(n,r,s,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add the vehicle
+      pp=obstaclePlot(n,r,c,ii,pp;(:append=>true),(:posterPlot=>true)); # add obstacles
+      pp=vehiclePlot(n,r,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add the vehicle
     else
-      pp=obstaclePlot(n,r,s,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add obstacles
-      pp=vehiclePlot(n,r,s,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add the vehicle
+      pp=obstaclePlot(n,r,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add obstacles
+      pp=vehiclePlot(n,r,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add the vehicle
     end
   end
   l = @layout [a{0.5w} [grid(2,2)
                         b{0.2h}]]
-  poster=plot(pp,sap,vt,longv,axp,tp,layout=l,size=(s.s1,s.s2));
-  savefig(string(r.results_dir,"poster",".",s.format));
+  poster=plot(pp,sap,vt,longv,axp,tp,layout=l,size=_pretty_defaults[:size]);
+  savefig(string(r.results_dir,"poster",".",_pretty_defaults[:format]));
   nothing
 end
-
-
-end # module

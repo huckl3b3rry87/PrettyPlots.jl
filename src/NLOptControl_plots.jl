@@ -1,16 +1,8 @@
-module NLOptControl_plots
-
 using Plots
 using DataFrames
 using VehicleModels
 using NLOptControl
 
-export
-      statePlot,
-      controlPlot,
-      allPlots,
-      tPlot,
-      adjust_axis
 """
 allPlots(n,r,Settings(),idx)
 --------------------------------------------------------------------------------------\n
@@ -18,26 +10,26 @@ Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 2/10/2017, Last Modified: 3/11/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function allPlots(n::NLOpt,r::Result,s::Settings,idx::Int64)
-  stp = [statePlot(n,r,s,idx,st) for st in 1:n.numStates];
-  ctp = [controlPlot(n,r,s,idx,ctr) for ctr in 1:n.numControls];
+function allPlots(n::NLOpt,r::Result,idx::Int64)
+  stp = [statePlot(n,r,idx,st) for st in 1:n.numStates];
+  ctp = [controlPlot(n,r,idx,ctr) for ctr in 1:n.numControls];
   all = [stp;ctp];
-  h = plot(all...,size=(s.s1,s.s1));
-  if !s.simulate; savefig(string(r.results_dir,"main.",_plot_defaults[:save])) end
+  h = plot(all...,size=_pretty_defaults[:size]);
+  if !_pretty_defaults[:simulate]; savefig(string(r.results_dir,"main.",_pretty_defaults[:format])) end
   return h
 end
 
 """
-stp=statePlot(n,r,s,r.eval_num,7);
-stp=statePlot(n,r,s,idx,st);
-stp=statePlot(n,r,s,idx,st;(:legend=>"test1"));
-stp=statePlot(n,r,s,idx,st,stp;(:append=>true));
+stp=statePlot(n,r,r.eval_num,7);
+stp=statePlot(n,r,idx,st);
+stp=statePlot(n,r,idx,st;(:legend=>"test1"));
+stp=statePlot(n,r,idx,st,stp;(:append=>true));
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 2/10/2017, Last Modified: 5/2/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function statePlot(n::NLOpt,r::Result,s::Settings,idx::Int64,st::Int64,args...;kwargs...)
+function statePlot(n::NLOpt,r::Result,idx::Int64,st::Int64,args...;kwargs...)
   kw = Dict(kwargs);
 
   # check to se if user would like to add to an existing plot
@@ -48,41 +40,41 @@ function statePlot(n::NLOpt,r::Result,s::Settings,idx::Int64,st::Int64,args...;k
 
   # check to see if user would like to plot limits
   if !haskey(kw,:lims); lims=true;
-  else; lims = get(kw,:lims,0);
+  else; lims=get(kw,:lims,0);
   end
 
   # check to see if user would like to label legend
-  if !haskey(kw,:legend); legend = "";
+  if !haskey(kw,:legend); legend_string = "";
   else; legend_string = get(kw,:legend,0);
   end
 
 	if r.dfs[idx]!=nothing
-  	t_vec=linspace(0.0,max(5,ceil(r.dfs[end][:t][end]/1)*1),s.L);
+  	t_vec=linspace(0.0,max(5,ceil(r.dfs[end][:t][end]/1)*1),_pretty_defaults[:L]);
 	else
-		t_vec=linspace(0.0,max(5,ceil(r.dfs_plant[end][:t][end]/1)*1),s.L);
+		t_vec=linspace(0.0,max(5,ceil(r.dfs_plant[end][:t][end]/1)*1),_pretty_defaults[:L]);
 	end
 
   if lims
-		# plot the lower limits
-		if n.mXL[st]!=false
-			if !isinf(n.XL[st]);plot!(r.t_st,n.XL_var[st,:],w=s.lw1,label=string(legend_string,"min"));end
-		else
-    	if !isinf(n.XL[st]);plot!(t_vec,n.XL[st]*ones(s.L,1),w=s.lw1,label=string(legend_string,"min"));end
-		end
-
 		# plot the upper limits
 		if n.mXU[st]!=false
-			if !isinf(n.XU[st]);plot!(r.t_st,n.XU_var[st,:],w=s.lw1,label=string(legend_string,"max"));end
+			if !isnan(n.XU[st]);plot!(r.t_st,n.XU_var[st,:],line=_pretty_defaults[:limit_lines][2],label=string(legend_string,"max"));end
 		else
-			if !isinf(n.XU[st]);plot!(t_vec,n.XU[st]*ones(s.L,1),w=s.lw1,label=string(legend_string,"max"));end
+			if !isnan(n.XU[st]);plot!(t_vec,n.XU[st]*ones(_pretty_defaults[:L],1),line=_pretty_defaults[:limit_lines][2],label=string(legend_string,"max"));end
 		end
+    
+    # plot the lower limits
+    if n.mXL[st]!=false
+      if !isnan(n.XL[st]);plot!(r.t_st,n.XL_var[st,:],line=_pretty_defaults[:limit_lines][1],label=string(legend_string,"min"));end
+    else
+      if !isnan(n.XL[st]);plot!(t_vec,n.XL[st]*ones(_pretty_defaults[:L],1),line=_pretty_defaults[:limit_lines][1],label=string(legend_string,"min"));end
+    end
   end
 
   # plot the values TODO if there are no lims then you cannot really see the signal
-	if r.dfs[idx]!=nothing && !s.plantOnly
-  	plot!(r.dfs[idx][:t],r.dfs[idx][n.state.name[st]],w=s.lw1,label=string(legend_string,"mpc"));
+	if r.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
+  	plot!(r.dfs[idx][:t],r.dfs[idx][n.state.name[st]],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"));
 	end
-  if s.MPC
+  if _pretty_defaults[:plant]
 		# values
 		temp = [r.dfs_plant[jj][n.state.name[st]] for jj in 1:idx];
 	  vals=[idx for tempM in temp for idx=tempM];
@@ -91,27 +83,27 @@ function statePlot(n::NLOpt,r::Result,s::Settings,idx::Int64,st::Int64,args...;k
 		temp = [r.dfs_plant[jj][:t] for jj in 1:idx];
 		time=[idx for tempM in temp for idx=tempM];
 
-    plot!(time,vals,line=_plot_defaults[:mpc_lines][1],label=string(legend_string,"plant"));
+    plot!(time,vals,line=_pretty_defaults[:plant_lines][1],label=string(legend_string,"plant"));
   end
   adjust_axis(xlims(),ylims());
 	xlims!(t_vec[1],t_vec[end]);
-  plot!(size=(s.s1,s.s1));
+  plot!(size=_pretty_defaults[:size]);
   yaxis!(n.state.description[st]); xaxis!("time (s)");
-  if !s.simulate; savefig(string(r.results_dir,n.state.name[st],".",s.format)); end
+  if !_pretty_defaults[:simulate]; savefig(string(r.results_dir,n.state.name[st],".",_pretty_defaults[:format])); end
   return stp
 end
 
 """
-stp=statePlot(n,r,s,idx,st1,st2);
-stp=statePlot(n,r,s,idx,st1,st2;(:legend=>"test1"));
-stp=statePlot(n,r,s,idx,st1,st2,stp;(:append=>true),(:lims=>false));
+stp=statePlot(n,r,idx,st1,st2);
+stp=statePlot(n,r,idx,st1,st2;(:legend=>"test1"));
+stp=statePlot(n,r,idx,st1,st2,stp;(:append=>true),(:lims=>false));
 # to compare two different states
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 2/10/2017, Last Modified: 3/11/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function statePlot(n::NLOpt,r::Result,s::Settings,idx::Int64,st1::Int64,st2::Int64,args...;kwargs...)
+function statePlot(n::NLOpt,r::Result,idx::Int64,st1::Int64,st2::Int64,args...;kwargs...)
   kw = Dict(kwargs);
 
   # check to see if user would like to add to an existing plot
@@ -134,19 +126,18 @@ function statePlot(n::NLOpt,r::Result,s::Settings,idx::Int64,st1::Int64,st2::Int
   # TODO check if all constraints are given
 	# TODO make it work for linear varying stateTol
   if lims
-    if !isinf(n.XL[st1]);plot!([n.XL[st1],n.XL[st1]],[n.XL[st2],n.XU[st2]],w=s.lw1,label=string(n.state.name[st1],"_min"));end
-    if !isinf(n.XU[st1]);plot!([n.XU[st1],n.XU[st1]],[n.XL[st2],n.XU[st2]],w=s.lw1,label=string(n.state.name[st1],"_max"));end
-
-    if !isinf(n.XL[st1]);plot!([n.XL[st1],n.XU[st1]],[n.XL[st2],n.XL[st2]],w=s.lw1,label=string(n.state.name[st2],"_min"));end
-    if !isinf(n.XU[st1]);plot!([n.XL[st1],n.XU[st1]],[n.XU[st2],n.XU[st2]],w=s.lw1,label=string(n.state.name[st2],"_max"));end
+    if !isnan(n.XU[st1]);plot!([n.XU[st1],n.XU[st1]],[n.XL[st2],n.XU[st2]],line=_pretty_defaults[:limit_lines][2],label=string(n.state.name[st1],"_max"));end
+    if !isnan(n.XL[st1]);plot!([n.XL[st1],n.XL[st1]],[n.XL[st2],n.XU[st2]],line=_pretty_defaults[:limit_lines][1],label=string(n.state.name[st1],"_min"));end
+    if !isnan(n.XU[st1]);plot!([n.XL[st1],n.XU[st1]],[n.XU[st2],n.XU[st2]],line=_pretty_defaults[:limit_lines][4],label=string(n.state.name[st2],"_max"));end
+    if !isnan(n.XL[st1]);plot!([n.XL[st1],n.XU[st1]],[n.XL[st2],n.XL[st2]],line=_pretty_defaults[:limit_lines][3],label=string(n.state.name[st2],"_min"));end
   end
 
   # plot the values
-	if r.dfs[idx]!=nothing && !s.plantOnly
-		plot!(r.dfs[idx][n.state.name[st1]],r.dfs[idx][n.state.name[st2]],w=s.lw1,label=string(legend_string,"mpc"));
+	if r.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
+		plot!(r.dfs[idx][n.state.name[st1]],r.dfs[idx][n.state.name[st2]],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"));
 	end
 
-  if s.MPC
+  if _pretty_defaults[:plant]
 		# values
 		temp = [r.dfs_plant[jj][n.state.name[st1]] for jj in 1:idx];
 		vals1=[idx for tempM in temp for idx=tempM];
@@ -155,26 +146,26 @@ function statePlot(n::NLOpt,r::Result,s::Settings,idx::Int64,st1::Int64,st2::Int
 		temp = [r.dfs_plant[jj][n.state.name[st2]] for jj in 1:idx];
 		vals2=[idx for tempM in temp for idx=tempM];
 
-		plot!(vals1,vals2,line=_plot_defaults[:mpc_lines][1],label=string(legend_string,"plant"));
+		plot!(vals1,vals2,line=_pretty_defaults[:plant_lines][1],label=string(legend_string,"plant"));
   end
   adjust_axis(xlims(),ylims());
-  plot!(size=(s.s1,s.s1));
+  plot!(size=_pretty_defaults[:size]);
   xaxis!(n.state.description[st1]);
   yaxis!(n.state.description[st2]);
-  if !s.simulate savefig(string(r.results_dir,n.state.name[st1],"_vs_",n.state.name[st2],".",s.format)); end
+  if !_pretty_defaults[:simulate] savefig(string(r.results_dir,n.state.name[st1],"_vs_",n.state.name[st2],".",_pretty_defaults[:format])); end
   return stp
 end
 
 """
-ctrp=controlPlot(n,r,s,idx,ctr);
-ctrp=controlPlot(n,r,s,idx,ctr,ctrp;(:append=>true));
+ctrp=controlPlot(n,r,idx,ctr);
+ctrp=controlPlot(n,r,idx,ctr,ctrp;(:append=>true));
 # to plot control signals
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 2/10/2017, Last Modified: 3/11/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function controlPlot(n::NLOpt,r::Result,s::Settings,idx::Int64,ctr::Int64,args...;kwargs...)
+function controlPlot(n::NLOpt,r::Result,idx::Int64,ctr::Int64,args...;kwargs...)
   kw = Dict(kwargs);
 
   # check to see if user would like to add to an existing plot
@@ -194,22 +185,22 @@ function controlPlot(n::NLOpt,r::Result,s::Settings,idx::Int64,ctr::Int64,args..
   end
 
 	if r.dfs[idx]!=nothing
-		t_vec=linspace(0.0,max(5,round(r.dfs[end][:t][end]/5)*5),s.L);
+		t_vec=linspace(0.0,max(5,round(r.dfs[end][:t][end]/5)*5),_pretty_defaults[:L]);
 	else
-		t_vec=linspace(0.0,max(5,round(r.dfs_plant[end][:t][end]/5)*5),s.L);
+		t_vec=linspace(0.0,max(5,round(r.dfs_plant[end][:t][end]/5)*5),_pretty_defaults[:L]);
 	end
 
   # plot the limits
   if lims
-    if !isinf(n.CL[ctr]); plot!(t_vec,n.CL[ctr]*ones(s.L,1),w=s.lw1,label="min"); end
-    if !isinf(n.CU[ctr]);plot!(t_vec,n.CU[ctr]*ones(s.L,1),w=s.lw1,label="max");end
+    if !isnan(n.CU[ctr]);plot!(t_vec,n.CU[ctr]*ones(_pretty_defaults[:L],1),line=_pretty_defaults[:limit_lines][2],label="max");end
+    if !isnan(n.CL[ctr]); plot!(t_vec,n.CL[ctr]*ones(_pretty_defaults[:L],1),line=_pretty_defaults[:limit_lines][1],label="min"); end
   end
 
   # plot the values
-	if r.dfs[idx]!=nothing  && !s.plantOnly
-  	plot!(r.dfs[idx][:t],r.dfs[idx][n.control.name[ctr]],w=s.lw1,label=string(legend_string,"mpc"));
+	if r.dfs[idx]!=nothing  && !_pretty_defaults[:plantOnly]
+  	plot!(r.dfs[idx][:t],r.dfs[idx][n.control.name[ctr]],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"));
 	end
-  if s.MPC
+  if _pretty_defaults[:plant]
 		# values
 		temp = [r.dfs_plant[jj][n.control.name[ctr]] for jj in 1:idx];
 	  vals=[idx for tempM in temp for idx=tempM];
@@ -218,19 +209,19 @@ function controlPlot(n::NLOpt,r::Result,s::Settings,idx::Int64,ctr::Int64,args..
 		temp = [r.dfs_plant[jj][:t] for jj in 1:idx];
 		time=[idx for tempM in temp for idx=tempM];
 
-		plot!(time,vals,line=_plot_defaults[:mpc_lines][1],label=string(legend_string,"plant"));
+		plot!(time,vals,line=_pretty_defaults[:plant_lines][1],label=string(legend_string,"plant"));
   end
   adjust_axis(xlims(),ylims());
 	xlims!(t_vec[1],t_vec[end]);
-  plot!(size=(s.s1,s.s1));
+  plot!(size=_pretty_defaults[:size]);
   yaxis!(n.control.description[ctr]);	xaxis!("time (s)");
-	if !s.simulate savefig(string(r.results_dir,n.control.name[ctr],".",s.format)) end
+	if !_pretty_defaults[:simulate] savefig(string(r.results_dir,n.control.name[ctr],".",_pretty_defaults[:format])) end
   return ctrp
 end
 
 """
-tp=tPlot(n,r,s,idx)
-tp=tPlot(n,r,s,idx,tp;(:append=>true))
+tp=tPlot(n,r,idx)
+tp=tPlot(n,r,idx,tp;(:append=>true))
 # plot the optimization times
 # this is an MPC plot
 --------------------------------------------------------------------------------------\n
@@ -238,8 +229,7 @@ Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 3/11/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function tPlot(n::NLOpt,r::Result,s::Settings,idx::Int64,args...;kwargs...);
-  if !s.MPC; error("\n This plot is for MPC \n"); end
+function tPlot(n::NLOpt,r::Result,idx::Int64,args...;kwargs...);
 
   kw = Dict(kwargs);
   # check to see if user would like to add to an existing plot
@@ -262,15 +252,15 @@ function tPlot(n::NLOpt,r::Result,s::Settings,idx::Int64,args...;kwargs...);
   L=length(r.dfs_opt);
 
   T_solve[1:L]=[r.dfs_opt[jj][:t_solve][1] for jj in 1:L];
-  scatter!(1:idx,T_solve[1:idx],markershape = :square, markercolor = :black, markersize = s.ms2,label=string(legend_string," opt. times"))
-	plot!(1:length(T_solve),n.mpc.tex*ones(length(T_solve)), w=s.lw1, leg=:true,label="real-time threshhold",leg=:topright)
+  scatter!(1:idx,T_solve[1:idx],marker=_pretty_defaults[:opt_marker],label=string(legend_string,"optimization times"))
+	plot!(1:length(T_solve),n.mpc.tex*ones(length(T_solve)),line=_pretty_defaults[:limit_lines][2],leg=:true,label="real-time threshhold",leg=:topright)
 
 	ylims!((0,n.mpc.tex*1.2))
-  xlims!((0,length(T_solve)))
+  xlims!((1,length(T_solve)))
 	yaxis!("Optimization Time (s)")
 	xaxis!("Evaluation Number")
-  plot!(size=(s.s1,s.s1));
-	if !s.simulate savefig(string(r.results_dir,"tplot.",s.format)) end
+  plot!(size=_pretty_defaults[:size]);
+	if !_pretty_defaults[:simulate] savefig(string(r.results_dir,"tplot.",_pretty_defaults[:format])) end
 	return tp
 end
 
@@ -284,7 +274,7 @@ function adjust_axis(x_lim,y_lim)
 	# additional axis movement
 	if x_lim[1]==0.0; a=-1; else a=0; end
 	if x_lim[2]==0.0; b=1; else b=0; end
-	if y_lim[1]==0.0; c=-0.01; else c=0; end
+	if y_lim[1]==0.0; c=-1; else c=0; end
 	if y_lim[2]==0.0; d=1; else d=0; end
 
 	xlim = Float64[0,0]; ylim = Float64[0,0];
@@ -296,6 +286,3 @@ function adjust_axis(x_lim,y_lim)
 	xlims!((xlim[1],xlim[2]))
 	ylims!((ylim[1],ylim[2]))
 end
-
-
-end # module
