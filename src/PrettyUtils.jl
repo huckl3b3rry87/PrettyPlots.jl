@@ -1,15 +1,16 @@
 #lc=distinguishable_colors(10);
 const _pretty_defaults = Dict(
     :size         =>(1800,1200), # size of figure
-    :format       =>:png,        # format for output plots
+    :format       =>"png",       # format for output plots
     :plant        =>false,       # bool for simulation of plant as well as MPC
     :plantOnly    =>false,       # bool for plotting only the plant response
     :simulate     =>false,       # bool for simulation
     :L            =>100,         # format for output plots
 
-    :mpc_lines    =>[(2.7,:blueviolet,:solid),(2.7,:blueviolet,:dash)],
+    :mpc_lines    =>[(2.7,:blue,:solid),(2.7,:blue,:dash)],
+    :mpc_markers  =>(:circle,:blueviolet,0.0,1.0),
     :plant_lines  =>[(4.3,:darkgreen,:solid),(4.3,:darkgreen,:dash)],
-    :limit_lines  =>[(2.0,:deeppink1,:solid),(2.0,:deeppink1,:dash),(2.0,:blue,:solid),(2.0,:blue,:dash)],
+    :limit_lines  =>[(2.0,:deeppink1,:solid),(2.0,:deeppink1,:dash),(2.0,:blueviolet,:solid),(2.0,:blueviolet,:dash)],
     :opt_marker  =>(:square, :black,3.0),
 
     # for VehicleModel.jl
@@ -39,7 +40,7 @@ plotSettings(;(:mpc_lines   =>[(4.0,:blueviolet,:solid),(4.0,:blueviolet,:dash)]
 plotSettings(;(:obstacle_marker =>(:circle,:red,10.0,1.0)),
                   (:goal_marker=>(:circle,:green,10.0,1.0))
              )
-
+ plotSettings(;(:mpc_lines =>[(4.0,:blueviolet,:solid)]),(:size=>(700,700)))
 # this function can be called to modify the default settings in PrettyPlots.jl
 # check out Colors.jl for an incredible amount of colors!
 """

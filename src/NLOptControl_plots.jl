@@ -61,7 +61,7 @@ function statePlot(n::NLOpt,r::Result,idx::Int64,st::Int64,args...;kwargs...)
 		else
 			if !isnan(n.XU[st]);plot!(t_vec,n.XU[st]*ones(_pretty_defaults[:L],1),line=_pretty_defaults[:limit_lines][2],label=string(legend_string,"max"));end
 		end
-    
+
     # plot the lower limits
     if n.mXL[st]!=false
       if !isnan(n.XL[st]);plot!(r.t_st,n.XL_var[st,:],line=_pretty_defaults[:limit_lines][1],label=string(legend_string,"min"));end
@@ -72,7 +72,7 @@ function statePlot(n::NLOpt,r::Result,idx::Int64,st::Int64,args...;kwargs...)
 
   # plot the values TODO if there are no lims then you cannot really see the signal
 	if r.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
-  	plot!(r.dfs[idx][:t],r.dfs[idx][n.state.name[st]],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"));
+  	plot!(r.dfs[idx][:t],r.dfs[idx][n.state.name[st]],marker=_pretty_defaults[:mpc_markers],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"));
 	end
   if _pretty_defaults[:plant]
 		# values
@@ -198,7 +198,7 @@ function controlPlot(n::NLOpt,r::Result,idx::Int64,ctr::Int64,args...;kwargs...)
 
   # plot the values
 	if r.dfs[idx]!=nothing  && !_pretty_defaults[:plantOnly]
-  	plot!(r.dfs[idx][:t],r.dfs[idx][n.control.name[ctr]],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"));
+  	plot!(r.dfs[idx][:t],r.dfs[idx][n.control.name[ctr]],line=_pretty_defaults[:mpc_lines][1],marker=_pretty_defaults[:mpc_markers],label=string(legend_string,"mpc"));
 	end
   if _pretty_defaults[:plant]
 		# values
