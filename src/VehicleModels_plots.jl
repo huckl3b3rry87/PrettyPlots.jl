@@ -7,16 +7,16 @@ using Plots
 obstaclePlot(n,c)
 
 # to run it after a single optimization
-pp=obstaclePlot(n,r,c,1);
+pp=obstaclePlot(n,c,1);
 
 # to create a new plot
-pp=obstaclePlot(n,r,c,idx);
+pp=obstaclePlot(n,c,idx);
 
 # to add to an exsting position plot
-pp=obstaclePlot(n,r,c,idx,pp;(:append=>true));
+pp=obstaclePlot(n,c,idx,pp;(:append=>true));
 
 # posterPlot
-pp=obstaclePlot(n,r,c,ii,pp;(:append=>true),(:posterPlot=>true)); # add obstacles
+pp=obstaclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true)); # add obstacles
 
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
@@ -24,7 +24,8 @@ Date Create: 3/11/2017, Last Modified: 4/3/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 
-function obstaclePlot(n,r,c,idx,args...;kwargs...)
+function obstaclePlot(n,c,idx,args...;kwargs...)
+  r=n.r;
   kw = Dict(kwargs);
 
   # check to see if is a basic plot
@@ -144,14 +145,16 @@ img=Images.load(Pkg.dir("PrettyPlots/src/humvee.png"));
 plot(img)
 =#
 """
-pp=vehiclePlot(n,r,c,idx);
-pp=vehiclePlot(n,r,c,idx,pp;(:append=>true));
+pp=vehiclePlot(n,c,idx);
+pp=vehiclePlot(n,c,idx,pp;(:append=>true));
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 4/4/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function vehiclePlot(n,r,c,idx,args...;kwargs...)
+function vehiclePlot(n,c,idx,args...;kwargs...)
+  r=n.r;
+
   kw = Dict(kwargs);
 
   # check to see if user wants to zoom
@@ -239,13 +242,15 @@ function vehiclePlot(n,r,c,idx,args...;kwargs...)
   return pp
 end
 """
-vt=vtPlot(n,r,pa,c,idx)
+vt=vtPlot(n,pa,c,idx)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 3/11/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function vtPlot(n::NLOpt,r::Result,pa::VehicleModels.Vpara,c,idx::Int64)
+function vtPlot(n::NLOpt,pa::VehicleModels.Vpara,c,idx::Int64)
+  r=n.r;
+
 	@unpack_Vpara pa
 
   if r.dfs[idx]!=nothing
@@ -303,15 +308,17 @@ function vtPlot(n::NLOpt,r::Result,pa::VehicleModels.Vpara,c,idx::Int64)
 end
 
 """
-axp=axLimsPlot(n,r,pa,idx)
-axp=axLimsPlot(n,r,pa,idx,axp;(:append=>true))
+axp=axLimsPlot(n,pa,idx)
+axp=axLimsPlot(n,pa,idx,axp;(:append=>true))
 # this plot adds the nonlinear limits on acceleration to the plot
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 3/11/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function axLimsPlot(n::NLOpt,r::Result,pa::VehicleModels.Vpara,idx::Int64,args...;kwargs...)
+function axLimsPlot(n::NLOpt,pa::VehicleModels.Vpara,idx::Int64,args...;kwargs...)
+  r=n.r;
+
   kw = Dict(kwargs);
   if !haskey(kw,:append); kw_ = Dict(:append => false); append = get(kw_,:append,0);
   else; append = get(kw,:append,0);
@@ -429,14 +436,16 @@ function lidarPlot(r,c,idx,args...;kwargs...)
 end
 """
 # to plot the second solution
-pp=posPlot(n,r,c,2)
-pp=posPlot(n,r,c,idx)
+pp=posPlot(n,c,2)
+pp=posPlot(n,c,idx)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/28/2017, Last Modified: 5/1/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function posPlot(n,r,c,idx;kwargs...)
+function posPlot(n,c,idx;kwargs...)
+  r=n.r;
+
   kw = Dict(kwargs);
   if !haskey(kw,:zoom); zoom=false;
   else; zoom=get(kw,:zoom,0);
@@ -459,64 +468,66 @@ function posPlot(n,r,c,idx;kwargs...)
   if !isempty(c.t.X); pp=trackPlot(c;(:smallMarkers=>smallMarkers)); else pp=plot(0,leg=:false); end  # track
   if !isempty(c.m.Lr); pp=lidarPlot(r,c,idx,pp;(:append=>true)); end  # lidar
 
-  pp=statePlot(n,r,idx,1,2,pp;(:lims=>false),(:append=>true)); # vehicle trajectory
-  pp=obstaclePlot(n,r,c,idx,pp;(:append=>true),(:smallMarkers=>smallMarkers),(:obstacleMiss=>obstacleMiss));               # obstacles
-  pp=vehiclePlot(n,r,c,idx,pp;(:append=>true),(:zoom=>zoom),(:setLims=>setLims),(:smallMarkers=>smallMarkers));  # vehicle
+  pp=statePlot(n,idx,1,2,pp;(:lims=>false),(:append=>true)); # vehicle trajectory
+  pp=obstaclePlot(n,c,idx,pp;(:append=>true),(:smallMarkers=>smallMarkers),(:obstacleMiss=>obstacleMiss));               # obstacles
+  pp=vehiclePlot(n,c,idx,pp;(:append=>true),(:zoom=>zoom),(:setLims=>setLims),(:smallMarkers=>smallMarkers));  # vehicle
 
   if !_pretty_defaults[:simulate] savefig(string(r.results_dir,"pp.",_pretty_defaults[:format])) end
   return pp
 end
 
 """
-main=mainPlot(n,r,c,pa,idx;kwargs...)
+main=mainPlot(n,c,pa,idx;kwargs...)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 5/1/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function mainPlot(n,r,c,pa,idx;kwargs...)
+function mainPlot(n,c,pa,idx;kwargs...)
+  r=n.r;
+
   kw = Dict(kwargs);
   if !haskey(kw,:mode);error("select a mode for the simulation \n")
   else; mode=get(kw,:mode,0);
   end
 
   if mode==:path1
-    sap=statePlot(n,r,idx,6)
-    vp=statePlot(n,r,idx,3)
-    rp=statePlot(n,r,idx,4)
-    vt=vtPlot(n,r,pa,c,idx)
-    pp=posPlot(n,r,c,idx)
-    pz=posPlot(n,r,c,idx;(:zoom=>true))
-    if _pretty_defaults[:plant]; tp=tPlot(n,r,idx); else; tp=plot(0,leg=:false); end
+    sap=statePlot(n,idx,6)
+    vp=statePlot(n,idx,3)
+    rp=statePlot(n,idx,4)
+    vt=vtPlot(n,pa,c,idx)
+    pp=posPlot(n,c,idx)
+    pz=posPlot(n,c,idx;(:zoom=>true))
+    if _pretty_defaults[:plant]; tp=tPlot(n,idx); else; tp=plot(0,leg=:false); end
     l = @layout [a{0.3w} [grid(2,2)
                           b{0.2h}]]
     mainS=plot(pp,sap,vt,pz,rp,tp,layout=l,size=_pretty_defaults[:size]);
   elseif mode==:path2
-    sap=statePlot(n,r,idx,6);plot!(leg=:topleft)
-    vp=statePlot(n,r,idx,3);plot!(leg=:topleft)
-    vt=vtPlot(n,r,pa,c,idx);plot!(leg=:bottomleft)
-    pz=posPlot(n,r,c,idx;(:zoom=>true));plot!(leg=:topleft)
-    if _pretty_defaults[:plant]; tp=tPlot(n,r,idx);plot!(leg=:topright) else; tp=plot(0,leg=:false);plot!(leg=:topright) end
+    sap=statePlot(n,idx,6);plot!(leg=:topleft)
+    vp=statePlot(n,idx,3);plot!(leg=:topleft)
+    vt=vtPlot(n,pa,c,idx);plot!(leg=:bottomleft)
+    pz=posPlot(n,c,idx;(:zoom=>true));plot!(leg=:topleft)
+    if _pretty_defaults[:plant]; tp=tPlot(n,idx);plot!(leg=:topright) else; tp=plot(0,leg=:false);plot!(leg=:topright) end
     l=@layout([a{0.6w} [b;c]; d{0.17h}])
     mainS=plot(pz,vt,sap,tp,layout=l,size=_pretty_defaults[:size]);
   elseif mode==:path3
-    sap=statePlot(n,r,idx,6);plot!(leg=:topleft)
-    vp=statePlot(n,r,idx,3);plot!(leg=:topleft)
-    vt=vtPlot(n,r,pa,c,idx);plot!(leg=:bottomleft)
-    pp=posPlot(n,r,c,idx;(:setLims=>true),(:smallMarkers=>true),(:obstacleMiss=>false));plot!(leg=false);
-    pz=posPlot(n,r,c,idx;(:zoom=>true),(:obstacleMiss=>false));plot!(leg=:topleft)
-    if _pretty_defaults[:plant]; tp=tPlot(n,r,idx);plot!(leg=:topright) else; tp=plot(0,leg=:false);plot!(leg=:topright) end
+    sap=statePlot(n,idx,6);plot!(leg=:topleft)
+    vp=statePlot(n,idx,3);plot!(leg=:topleft)
+    vt=vtPlot(n,pa,c,idx);plot!(leg=:bottomleft)
+    pp=posPlot(n,c,idx;(:setLims=>true),(:smallMarkers=>true),(:obstacleMiss=>false));plot!(leg=false);
+    pz=posPlot(n,c,idx;(:zoom=>true),(:obstacleMiss=>false));plot!(leg=:topleft)
+    if _pretty_defaults[:plant]; tp=tPlot(n,idx);plot!(leg=:topright) else; tp=plot(0,leg=:false);plot!(leg=:topright) end
     l=@layout([[a;
                 b{0.2h}] [c;d;e]])
     mainS=plot(pz,pp,vt,sap,tp,layout=l,size=_pretty_defaults[:size]);
   elseif mode==:open1
-    sap=statePlot(n,r,idx,6);plot!(leg=:topleft)
-    longv=statePlot(n,r,idx,7);plot!(leg=:topleft)
-    axp=axLimsPlot(n,r,pa,idx);# add nonlinear acceleration limits
-    axp=statePlot(n,r,idx,8,axp;(:lims=>false),(:append=>true));plot!(leg=:bottomright);
-    pp=posPlot(n,r,c,idx;(:setLims=>true));plot!(leg=:topright);
-    if _pretty_defaults[:plant]; tp=tPlot(n,r,idx); else; tp=plot(0,leg=:false); end
-    vt=vtPlot(n,r,pa,c,idx)
+    sap=statePlot(n,idx,6);plot!(leg=:topleft)
+    longv=statePlot(n,idx,7);plot!(leg=:topleft)
+    axp=axLimsPlot(n,pa,idx);# add nonlinear acceleration limits
+    axp=statePlot(n,idx,8,axp;(:lims=>false),(:append=>true));plot!(leg=:bottomright);
+    pp=posPlot(n,c,idx;(:setLims=>true));plot!(leg=:topright);
+    if _pretty_defaults[:plant]; tp=tPlot(n,idx); else; tp=plot(0,leg=:false); end
+    vt=vtPlot(n,pa,c,idx)
     l = @layout [a{0.5w} [grid(2,2)
                           b{0.2h}]]
     mainS=plot(pp,sap,vt,longv,axp,tp,layout=l,size=_pretty_defaults[:size]);
@@ -527,14 +538,16 @@ end
 
 
 """
-mainSim(n,r,c,pa;(:mode=>:open1))
+mainSim(n,c,pa;(:mode=>:open1))
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 4/13/2017, Last Modified: 5/1/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 
-function mainSim(n,r,c,pa;kwargs...)
+function mainSim(n,c,pa;kwargs...)
+  r=n.r;
+
   kw = Dict(kwargs);
   if !haskey(kw,:mode);error("select a mode for the simulation \n")
   else; mode=get(kw,:mode,0);
@@ -542,7 +555,7 @@ function mainSim(n,r,c,pa;kwargs...)
 
   if r.eval_num>2;
      anim = @animate for idx in 1:length(r.dfs)
-       mainPlot(n,r,c,pa,idx;(:mode=>mode))
+       mainPlot(n,c,pa,idx;(:mode=>mode))
     end
     cd(r.results_dir)
       gif(anim,"mainSim.gif",fps=Int(ceil(1/n.mpc.tex)));
@@ -552,7 +565,7 @@ function mainSim(n,r,c,pa;kwargs...)
     warn("the evaluation number was not greater than 2. Cannot make animation. Plotting a static plot.")
     warn("\n Modifying current plot settings! \n")
     plotSettings(;(:simulate=>false),(:MPC=>false));
-    mainPlot(n,r,c,pa,2;(:mode=>mode))
+    mainPlot(n,c,pa,2;(:mode=>mode))
   end
   nothing
 end
@@ -565,9 +578,11 @@ Date Create: 4/13/2017, Last Modified: 5/1/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 
-function pSim(n,r,c)
+function pSim(n,c)
+  r=n.r;
+
   anim = @animate for ii in 1:length(r.dfs)
-    posPlot(n,r,c,ii);
+    posPlot(n,c,ii);
   end
   gif(anim, string(r.results_dir,"posSim.gif"), fps=Int(ceil(1/n.mpc.tex)) );
   nothing
@@ -582,37 +597,40 @@ Date Create: 4/13/2017, Last Modified: 4/13/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 
-function pSimGR(n,r,c)
+function pSimGR(n,c)
+
   ENV["GKS_WSTYPE"]="mov"
   gr(show=true)
-  for ii in 1:length(r.dfs)
-    posPlot(n,r,c,ii);
+  for ii in 1:length(n.r.dfs)
+    posPlot(n,c,ii);
   end
 end
 
 """
 default(guidefont = font(17), tickfont = font(15), legendfont = font(12), titlefont = font(20))
 s=Settings(;save=true,MPC=true,simulate=false,format=:png,plantOnly=true);
-posterP(n,r,c,pa)
+posterP(n,c,pa)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 4/13/2017, Last Modified: 4/13/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 
-function posterP(n,r,c,pa)
+function posterP(n,c,pa)
+  r=n.r;
+
   warn("\n Modifying current plot settings! \n")
   plotSettings(;(:simulate=>false),(:plant=>true),(:plantOnly=>true));
 
   # static plots for each frame
   idx=r.eval_num;
-  sap=statePlot(n,r,idx,6)
-  longv=statePlot(n,r,idx,7)
-  axp=axLimsPlot(n,r,pa,idx); # add nonlinear acceleration limits
-  axp=statePlot(n,r,idx,8,axp;(:lims=>false),(:append=>true));
-  pp=statePlot(n,r,idx,1,2;(:lims=>false));
-  if _pretty_defaults[:plant]; tp=tPlot(n,r,idx); else; tp=plot(0,leg=:false); end
-  vt=vtPlot(n,r,pa,c,idx)
+  sap=statePlot(n,idx,6)
+  longv=statePlot(n,idx,7)
+  axp=axLimsPlot(n,pa,idx); # add nonlinear acceleration limits
+  axp=statePlot(n,idx,8,axp;(:lims=>false),(:append=>true));
+  pp=statePlot(n,idx,1,2;(:lims=>false));
+  if _pretty_defaults[:plant]; tp=tPlot(n,idx); else; tp=plot(0,leg=:false); end
+  vt=vtPlot(n,pa,c,idx)
 
   # dynamic plots ( maybe only update every 5 frames or so)
   v=Vector(1:5:r.eval_num); if v[end]!=r.eval_num; append!(v,r.eval_num); end
@@ -629,11 +647,11 @@ function posterP(n,r,c,pa)
 
   		pp=plot(vals1,vals2,line=_pretty_defaults[:plant_lines][1],label="Vehicle Trajectory");
 
-      pp=obstaclePlot(n,r,c,ii,pp;(:append=>true),(:posterPlot=>true)); # add obstacles
-      pp=vehiclePlot(n,r,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add the vehicle
+      pp=obstaclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true)); # add obstacles
+      pp=vehiclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add the vehicle
     else
-      pp=obstaclePlot(n,r,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add obstacles
-      pp=vehiclePlot(n,r,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add the vehicle
+      pp=obstaclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add obstacles
+      pp=vehiclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add the vehicle
     end
   end
   l = @layout [a{0.5w} [grid(2,2)
