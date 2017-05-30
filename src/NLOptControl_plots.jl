@@ -4,13 +4,14 @@ using VehicleModels
 using NLOptControl
 
 """
-allPlots(n,idx)
+allPlots(n;idx)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 2/10/2017, Last Modified: 5/28/2017 \n
+Date Create: 2/10/2017, Last Modified: 5/29/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function allPlots(n::NLOpt,idx::Int64)
+function allPlots(n::NLOpt;idx::Int64=1)
+  if !isdir(n.r.results_dir); resultsDir!(n); end
   stp = [statePlot(n,idx,st) for st in 1:n.numStates];
   ctp = [controlPlot(n,idx,ctr) for ctr in 1:n.numControls];
   all = [stp;ctp];
@@ -48,7 +49,7 @@ function statePlot(n::NLOpt,idx::Int64,st::Int64,args...;kwargs...)
   else; legend_string = get(kw,:legend,0);
   end
 
-	if r.dfs[idx]!=nothing
+	if n.r.dfs[idx]!=nothing
   	t_vec=linspace(0.0,max(1,ceil(n.r.dfs[end][:t][end]/1)*1),_pretty_defaults[:L]);
 	else
 		t_vec=linspace(0.0,max(1,ceil(n.r.dfs_plant[end][:t][end]/1)*1),_pretty_defaults[:L]);
@@ -59,7 +60,7 @@ function statePlot(n::NLOpt,idx::Int64,st::Int64,args...;kwargs...)
 		if n.mXU[st]!=false
 			if !isnan(n.XU[st]);plot!(n.r.t_st,n.XU_var[st,:],line=_pretty_defaults[:limit_lines][2],label=string(legend_string,"max"));end
 		else
-			if !isnan(n.XU[st]);plot!(n.t_vec,n.XU[st]*ones(_pretty_defaults[:L],1),line=_pretty_defaults[:limit_lines][2],label=string(legend_string,"max"));end
+			if !isnan(n.XU[st]);plot!(t_vec,n.XU[st]*ones(_pretty_defaults[:L],1),line=_pretty_defaults[:limit_lines][2],label=string(legend_string,"max"));end
 		end
 
     # plot the lower limits
@@ -133,7 +134,7 @@ function statePlot(n::NLOpt,idx::Int64,st1::Int64,st2::Int64,args...;kwargs...)
   end
 
   # plot the values
-	if r.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
+	if n.r.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
 		plot!(n.r.dfs[idx][n.state.name[st1]],n.r.dfs[idx][n.state.name[st2]],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"));
 	end
 
@@ -184,7 +185,7 @@ function controlPlot(n::NLOpt,idx::Int64,ctr::Int64,args...;kwargs...)
   else; legend_string = get(kw,:legend,0);
   end
 
-	if r.dfs[idx]!=nothing
+	if n.r.dfs[idx]!=nothing
 		t_vec=linspace(0.0,max(1,round(n.r.dfs[end][:t][end]/5)*5),_pretty_defaults[:L]);
 	else
 		t_vec=linspace(0.0,max(1,round(n.r.dfs_plant[end][:t][end]/5)*5),_pretty_defaults[:L]);
@@ -197,7 +198,7 @@ function controlPlot(n::NLOpt,idx::Int64,ctr::Int64,args...;kwargs...)
   end
 
   # plot the values
-	if r.dfs[idx]!=nothing  && !_pretty_defaults[:plantOnly]
+	if n.r.dfs[idx]!=nothing  && !_pretty_defaults[:plantOnly]
   	plot!(n.r.dfs[idx][:t],n.r.dfs[idx][n.control.name[ctr]],line=_pretty_defaults[:mpc_lines][1],marker=_pretty_defaults[:mpc_markers],label=string(legend_string,"mpc"));
 	end
   if _pretty_defaults[:plant]
