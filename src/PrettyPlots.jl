@@ -2,6 +2,10 @@ module PrettyPlots
 
 using Colors
 using DataFrames
+using Plots
+gr(); # default backend
+using VehicleModels
+using NLOptControl
 
 include("PrettyUtils.jl")
 include("NLOptControl_plots.jl")

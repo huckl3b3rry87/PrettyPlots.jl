@@ -1,8 +1,3 @@
-using Plots
-using DataFrames
-using VehicleModels
-using NLOptControl
-
 """
 allPlots(n;idx)
 --------------------------------------------------------------------------------------\n
@@ -50,9 +45,9 @@ function statePlot(n::NLOpt,idx::Int64,st::Int64,args...;kwargs...)
   end
 
 	if n.r.dfs[idx]!=nothing
-  	t_vec=linspace(0.0,max(1,ceil(n.r.dfs[end][:t][end]/1)*1),_pretty_defaults[:L]);
+  	t_vec=linspace(0.0,n.r.dfs[end][:t][end],_pretty_defaults[:L]);
 	else
-		t_vec=linspace(0.0,max(1,ceil(n.r.dfs_plant[end][:t][end]/1)*1),_pretty_defaults[:L]);
+		t_vec=linspace(0.0,n.r.dfs_plant[end][:t][end],_pretty_defaults[:L]);
 	end
 
   if lims
@@ -185,10 +180,10 @@ function controlPlot(n::NLOpt,idx::Int64,ctr::Int64,args...;kwargs...)
   else; legend_string = get(kw,:legend,0);
   end
 
-	if n.r.dfs[idx]!=nothing
-		t_vec=linspace(0.0,max(1,round(n.r.dfs[end][:t][end]/5)*5),_pretty_defaults[:L]);
+  if n.r.dfs[idx]!=nothing
+  	t_vec=linspace(0.0,n.r.dfs[end][:t][end],_pretty_defaults[:L]);
 	else
-		t_vec=linspace(0.0,max(1,round(n.r.dfs_plant[end][:t][end]/5)*5),_pretty_defaults[:L]);
+		t_vec=linspace(0.0,n.r.dfs_plant[end][:t][end],_pretty_defaults[:L]);
 	end
 
   # plot the limits
@@ -279,10 +274,10 @@ function adjust_axis(x_lim,y_lim)
 	if y_lim[2]==0.0; d=1; else d=0; end
 
 	xlim = Float64[0,0]; ylim = Float64[0,0];
-	xlim[1] = x_lim[1]+x_lim[1]*al_x[1]+a;
-	xlim[2] = x_lim[2]+x_lim[2]*al_x[2]+b;
-	ylim[1] = y_lim[1]+y_lim[1]*al_y[1]+c;
-	ylim[2] = y_lim[2]+y_lim[2]*al_y[2]+d;
+	xlim[1] = x_lim[1]-abs(x_lim[1]*al_x[1])+a;
+	xlim[2] = x_lim[2]+abs(x_lim[2]*al_x[2])+b;
+	ylim[1] = y_lim[1]-abs(y_lim[1]*al_y[1])+c;
+	ylim[2] = y_lim[2]+abs(y_lim[2]*al_y[2])+d;
 
 	xlims!((xlim[1],xlim[2]))
 	ylims!((ylim[1],ylim[2]))

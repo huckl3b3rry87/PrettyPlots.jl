@@ -1,7 +1,3 @@
-using NLOptControl
-using VehicleModels
-using Plots
-
 """
 # to visualize the current obstacle in the field
 obstaclePlot(n,c)
