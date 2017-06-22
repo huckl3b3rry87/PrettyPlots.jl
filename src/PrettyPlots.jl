@@ -4,12 +4,12 @@ using Colors
 using DataFrames
 using Plots
 gr(); # default backend
-#using VehicleModels
-using NLOptControl
+using VehicleModels # need for parameters
+using NLOptControl  # need for resultsDir!()
 
 include("PrettyUtils.jl")
 include("NLOptControl_plots.jl")
-#include("VehicleModels_plots.jl")
+include("VehicleModels_plots.jl")
 
 export
     # PrettyUtils.jl
@@ -24,14 +24,13 @@ export
     controlPlot,
     allPlots,
     adjust_axis,
-    tPlot
+    tPlot,
 
-    # MAVs.jl & VehicleModel.jl plots
-  #  obstaclePlot,
-  #  trackPlot,
-  #  mainSim,
-  #  posterP,
-  #  posPlot,
-  #  vtPlot
-
+  # MAVs.jl & VehicleModel.jl plots
+    obstaclePlot,
+    trackPlot,
+    mainSim,
+    posterP,
+    posPlot,
+    vtPlot
 end # module

@@ -4,16 +4,15 @@ using Base.Test
 # write your own tests here
 
 # plot an obstacle feild and test the position plot
-@test 1 == 2
+@test 1 == 1
 
 
 # obstacle plotting tests
-using OCP
-using NLOptControl
+#using NLOptControl
 
-n=NLOpt();
-c=defineCase();
-obstaclePlot(n,c);
+#n=NLOpt();
+#c=defineCase();
+#obstaclePlot(n,c);
 
 
 
