@@ -244,7 +244,7 @@ Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 3/11/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function vtPlot(n::NLOpt,pa::VehicleModels.Vpara,c,idx::Int64)
+function vtPlot(n,pa,c,idx::Int64)
   r=n.r;
 
 	@unpack_Vpara pa
@@ -312,7 +312,7 @@ Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 3/11/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function axLimsPlot(n::NLOpt,pa::VehicleModels.Vpara,idx::Int64,args...;kwargs...)
+function axLimsPlot(n,pa,idx::Int64,args...;kwargs...)
   r=n.r;
 
   kw = Dict(kwargs);

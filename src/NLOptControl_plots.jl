@@ -5,7 +5,7 @@ Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 2/10/2017, Last Modified: 5/29/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function allPlots(n::NLOpt;idx::Int64=1)
+function allPlots(n;idx::Int64=1)
   if !isdir(n.r.results_dir); resultsDir!(n); end
   stp = [statePlot(n,idx,st) for st in 1:n.numStates];
   ctp = [controlPlot(n,idx,ctr) for ctr in 1:n.numControls];
@@ -25,7 +25,7 @@ Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 2/10/2017, Last Modified: 5/28/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function statePlot(n::NLOpt,idx::Int64,st::Int64,args...;kwargs...)
+function statePlot(n,idx::Int64,st::Int64,args...;kwargs...)
   kw = Dict(kwargs);
 
   # check to se if user would like to add to an existing plot
@@ -99,7 +99,7 @@ Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 2/10/2017, Last Modified: 5/28/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function statePlot(n::NLOpt,idx::Int64,st1::Int64,st2::Int64,args...;kwargs...)
+function statePlot(n,idx::Int64,st1::Int64,st2::Int64,args...;kwargs...)
   kw = Dict(kwargs);
 
   # check to see if user would like to add to an existing plot
@@ -161,7 +161,7 @@ Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 2/10/2017, Last Modified: 5/28/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function controlPlot(n::NLOpt,idx::Int64,ctr::Int64,args...;kwargs...)
+function controlPlot(n,idx::Int64,ctr::Int64,args...;kwargs...)
   kw = Dict(kwargs);
 
   # check to see if user would like to add to an existing plot
@@ -225,7 +225,7 @@ Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 3/11/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function tPlot(n::NLOpt,idx::Int64,args...;kwargs...);
+function tPlot(n,idx::Int64,args...;kwargs...);
 
   kw = Dict(kwargs);
   # check to see if user would like to add to an existing plot
