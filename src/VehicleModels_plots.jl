@@ -103,7 +103,7 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
           y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*tc;
         end
         pts=collect(zip(x, y))
-        X=c.o.X0[i] + c.o.s_x[i]*r.dfs_plant[idx][:t][end]
+        X=c.o.X0[i] + c.o.s_x[i]*r.dfs_plant[idx][:t][end];
         Y=c.o.Y0[i] + c.o.s_y[i]*r.dfs_plant[idx][:t][end];
         if posterPlot
           shade=idx/r.eval_num;
@@ -473,14 +473,15 @@ function posPlot(n,c,idx;kwargs...)
 end
 
 """
-main=mainPlot(n,c,pa,idx;kwargs...)
+main=mainPlot(n,c,idx;kwargs...)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 3/11/2017, Last Modified: 5/1/2017 \n
+Date Create: 3/11/2017, Last Modified: 6/22/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function mainPlot(n,c,pa,idx;kwargs...)
+function mainPlot(n,c,idx;kwargs...)
   r=n.r;
+  pa=n.params[1];
 
   kw = Dict(kwargs);
   if !haskey(kw,:mode);error("select a mode for the simulation \n")
@@ -534,14 +535,14 @@ end
 
 
 """
-mainSim(n,c,pa;(:mode=>:open1))
+mainSim(n,c;(:mode=>:open1))
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 4/13/2017, Last Modified: 5/1/2017 \n
+Date Create: 4/13/2017, Last Modified: 6/22/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 
-function mainSim(n,c,pa;kwargs...)
+function mainSim(n,c;kwargs...)
   r=n.r;
 
   kw = Dict(kwargs);
@@ -549,19 +550,19 @@ function mainSim(n,c,pa;kwargs...)
   else; mode=get(kw,:mode,0);
   end
 
-  if r.eval_num>2;
-     anim = @animate for idx in 1:length(r.dfs)
-       mainPlot(n,c,pa,idx;(:mode=>mode))
+  if n.r.eval_num>2;
+     anim = @animate for idx in 1:length(n.r.dfs)
+       mainPlot(n,c,idx;(:mode=>mode))
     end
-    cd(r.results_dir)
+    cd(n.r.results_dir)
       gif(anim,"mainSim.gif",fps=Int(ceil(1/n.mpc.tex)));
       run(`ffmpeg -f gif -i mainSim.gif RESULT.mp4`)
-    cd(r.main_dir)
+    cd(n.r.main_dir)
   else
     warn("the evaluation number was not greater than 2. Cannot make animation. Plotting a static plot.")
     warn("\n Modifying current plot settings! \n")
-    plotSettings(;(:simulate=>false),(:MPC=>false));
-    mainPlot(n,c,pa,2;(:mode=>mode))
+    plotSettings(;(:simulate=>false),(:plant=>false));
+    mainPlot(n,c,1;(:mode=>mode))
   end
   nothing
 end
@@ -605,15 +606,16 @@ end
 """
 default(guidefont = font(17), tickfont = font(15), legendfont = font(12), titlefont = font(20))
 s=Settings(;save=true,MPC=true,simulate=false,format=:png,plantOnly=true);
-posterP(n,c,pa)
+posterP(n,c)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 4/13/2017, Last Modified: 4/13/2017 \n
+Date Create: 4/13/2017, Last Modified: 6/22/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 
-function posterP(n,c,pa)
+function posterP(n,c)
   r=n.r;
+  pa=n.params[1];
 
   warn("\n Modifying current plot settings! \n")
   plotSettings(;(:simulate=>false),(:plant=>true),(:plantOnly=>true));
@@ -654,5 +656,5 @@ function posterP(n,c,pa)
                         b{0.2h}]]
   poster=plot(pp,sap,vt,longv,axp,tp,layout=l,size=_pretty_defaults[:size]);
   savefig(string(r.results_dir,"poster",".",_pretty_defaults[:format]));
-  nothing
+  return nothing
 end
