@@ -616,7 +616,9 @@ Date Create: 4/13/2017, Last Modified: 6/22/2017 \n
 function posterP(n,c)
   r=n.r;
   pa=n.params[1];
-
+  if n.r.status==:Infeasible
+    warn("\n Current solution is infeasible! Will try to plot, but it may fail... \n")
+  end
   warn("\n Modifying current plot settings! \n")
   plotSettings(;(:simulate=>false),(:plant=>true),(:plantOnly=>true));
 
