@@ -222,10 +222,11 @@ tp=tPlot(n,r,idx,tp;(:append=>true))
 # this is an MPC plot
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 3/11/2017, Last Modified: 3/11/2017 \n
+Date Create: 3/11/2017, Last Modified: 6/28/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function tPlot(n,idx::Int64,args...;kwargs...);
+  r=n.r;
 
   kw = Dict(kwargs);
   # check to see if user would like to add to an existing plot
@@ -251,8 +252,8 @@ function tPlot(n,idx::Int64,args...;kwargs...);
   scatter!(1:idx,T_solve[1:idx],marker=_pretty_defaults[:opt_marker],label=string(legend_string,"optimization times"))
 	plot!(1:length(T_solve),n.mpc.tex*ones(length(T_solve)),line=_pretty_defaults[:limit_lines][2],leg=:true,label="real-time threshhold",leg=:topright)
 
-	ylims!((0,n.mpc.tex*1.2))
-  xlims!((1,length(T_solve)))
+	ylims!(0,max(n.mpc.tex*1.2, maximum(T_solve)))
+  xlims!(1,length(T_solve))
 	yaxis!("Optimization Time (s)")
 	xaxis!("Evaluation Number")
   plot!(size=_pretty_defaults[:size]);

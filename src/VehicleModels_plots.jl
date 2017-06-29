@@ -551,7 +551,7 @@ function mainSim(n,c;kwargs...)
   end
 
   if n.r.eval_num>2;
-     anim = @animate for idx in 1:length(n.r.dfs)
+     anim = @animate for idx in 1:n.r.eval_num
        mainPlot(n,c,idx;(:mode=>mode))
     end
     cd(n.r.results_dir)
@@ -564,7 +564,7 @@ function mainSim(n,c;kwargs...)
     plotSettings(;(:simulate=>false),(:plant=>false));
     mainPlot(n,c,1;(:mode=>mode))
   end
-  nothing
+  return nothing
 end
 
 """
@@ -582,7 +582,7 @@ function pSim(n,c)
     posPlot(n,c,ii);
   end
   gif(anim, string(r.results_dir,"posSim.gif"), fps=Int(ceil(1/n.mpc.tex)) );
-  nothing
+  return nothing
 end
 
 
