@@ -202,7 +202,7 @@ function controlPlot(n,idx::Int64,ctr::Int64,args...;kwargs...)
 	  vals=[idx for tempM in temp for idx=tempM];
 
 		# time
-		temp = [r.dfs_plant[jj][:t] for jj in 1:idx];
+		temp = [n.r.dfs_plant[jj][:t] for jj in 1:idx];
 		time=[idx for tempM in temp for idx=tempM];
 
 		plot!(time,vals,line=_pretty_defaults[:plant_lines][1],label=string(legend_string,"plant"));
