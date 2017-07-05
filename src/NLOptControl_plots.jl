@@ -230,13 +230,13 @@ function tPlot(n,idx::Int64,args...;kwargs...);
 
   kw = Dict(kwargs);
   # check to see if user would like to add to an existing plot
-  if !haskey(kw,:append); kw_ = Dict(:append => false); append = get(kw_,:append,0);
+  if !haskey(kw,:append); append=false;
   else; append = get(kw,:append,0);
   end
   if !append; tp=plot(0,leg=:false); else tp=args[1]; end
 
   # check to see if user would like to label legend
-  if !haskey(kw,:legend); kw_ = Dict(:legend => ""); legend_string = get(kw_,:legend,0);
+  if !haskey(kw,:legend);legend_string="";
   else; legend_string = get(kw,:legend,0);
   end
 
@@ -259,6 +259,24 @@ function tPlot(n,idx::Int64,args...;kwargs...);
   plot!(size=_pretty_defaults[:size]);
 	if !_pretty_defaults[:simulate] savefig(string(n.r.results_dir,"tplot.",_pretty_defaults[:format])) end
 	return tp
+end
+
+"""
+--------------------------------------------------------\n
+Author: Huckleberry Febbo, Graduate Student, University of Michigan
+Date Create: 7/04/2017, Last Modified: 7/04/2017 \n
+--------------------------------------------------------------------------------------\n
+"""
+function optPlot(n)
+  temp = [n.r.dfs_opt[jj][:obj_val] for jj in 1:L];
+  val=[idx for tempM in temp for idx=tempM];
+
+  plot(1:L,val)
+
+  yaxis!("Objective Function Values")
+	xaxis!("Evaluation Number")
+  savefig(string(n.r.results_dir,"optPlot.",_pretty_defaults[:format]))
+  return opt
 end
 
 

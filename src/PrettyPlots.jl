@@ -25,6 +25,7 @@ export
     allPlots,
     adjust_axis,
     tPlot,
+    optPlot,
 
   # MAVs.jl & VehicleModel.jl plots
     obstaclePlot,
