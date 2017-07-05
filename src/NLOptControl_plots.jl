@@ -268,6 +268,7 @@ Date Create: 7/04/2017, Last Modified: 7/04/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function optPlot(n)
+  L=length(n.r.dfs_opt)
   temp = [n.r.dfs_opt[jj][:obj_val] for jj in 1:L];
   val=[idx for tempM in temp for idx=tempM];
 
