@@ -272,7 +272,7 @@ function optPlot(n)
   temp = [n.r.dfs_opt[jj][:obj_val] for jj in 1:L];
   val=[idx for tempM in temp for idx=tempM];
 
-  plot(1:L,val)
+  opt=plot(1:L,val)
 
   yaxis!("Objective Function Values")
 	xaxis!("Evaluation Number")
