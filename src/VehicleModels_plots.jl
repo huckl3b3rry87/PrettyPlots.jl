@@ -16,7 +16,7 @@ pp=obstaclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true)); # add obstacles
 
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 3/11/2017, Last Modified: 4/3/2017 \n
+Date Create: 3/11/2017, Last Modified: 7/5/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 
@@ -25,12 +25,12 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
   kw = Dict(kwargs);
 
   # check to see if is a basic plot
-  if !haskey(kw,:basic); kw_ = Dict(:basic => false); basic = get(kw_,:basic,0);
+  if !haskey(kw,:basic); basic=false;
   else; basic=get(kw,:basic,0);
   end
 
   # check to see if is a poster plot
-  if !haskey(kw,:posterPlot); kw_ = Dict(:posterPlot=>false); posterPlot= get(kw_,:posterPlot,0);
+  if !haskey(kw,:posterPlot);posterPlot=false;
   else; posterPlot=get(kw,:posterPlot,0);
   end
 
@@ -45,8 +45,22 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
   end
 
   if basic
-    s=Settings();
     pp=plot(0,leg=:false)
+
+    if c.g.name!=:NA  # TODO remove redundant code
+      if isnan(n.XF_tol[1]); rg=1; else rg=n.XF_tol[1]; end
+      if !posterPlot || idx ==r.eval_num
+        pts = Plots.partialcircle(0,2π,100,rg);
+        x, y = Plots.unzip(pts);
+        x += c.g.x_ref;  y += c.g.y_ref;
+        pts = collect(zip(x, y));
+        if !smallMarkers  #TODO get ride of this-> will not be a legend for this case
+          scatter!((c.g.x_ref,c.g.y_ref),marker=_pretty_defaults[:goal_marker],label="Goal")
+        end
+        plot!(pts,line=_pretty_defaults[:goal_line],fill=_pretty_defaults[:goal_fill],leg=true,label="")
+      end
+    end
+
     if !isempty(c.o.A)
       for i in 1:length(c.o.A)
           # create an ellipse
@@ -57,9 +71,10 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
           y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*tc;
           pts = collect(zip(x, y))
           if i==1
-            scatter!((c.o.X0[i],c.o.Y0[i]),marker=(:circle,:red,4.0,1),label="Obstacles")
+            scatter!((c.o.X0[i],c.o.Y0[i]),marker=_pretty_defaults[:obstacle_marker],label="Obstacles")
           end
-          plot!(pts,line=(4.0,0.0,:solid,:red),fill=(0, 1, :red),leg=true,label="")
+          plot!(pts,line=_pretty_defaults[:obstacle_line],fill=_pretty_defaults[:obstacle_fill],leg=true,label="") #line=(3.0,0.0,:solid,:red)
+        #  plot!(pts,line=(4.0,0.0,:solid,:red),fill=(0, 1, :red),leg=true,label="")
       end
     end
   else
@@ -70,7 +85,7 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
     if !append; pp=plot(0,leg=:false); else pp=args[1]; end
 
     # plot the goal; assuming same in x and y
-    if c.g.name!=:NA
+    if c.g.name!=:NA  # TODO remove redundant code
       if isnan(n.XF_tol[1]); rg=1; else rg=n.XF_tol[1]; end
       if !posterPlot || idx ==r.eval_num
         pts = Plots.partialcircle(0,2π,100,rg);
@@ -131,7 +146,7 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
   return pp
 end
 
-obstaclePlot(n,c)=obstaclePlot(n,1,1,c,1,;(:basic=>true))
+obstaclePlot(n,c)=obstaclePlot(n,c,1;(:basic=>true))
 
 #=
 using Plots
