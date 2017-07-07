@@ -1,0 +1,19 @@
+TODO
+
+==================
+# High Priority #
+==================
+
+
+===================
+# Medium Priority #
+===================
+1) make a general check to see if the time elapsed is very small
+julia> n.r.dfs[end][:t][1]-n.r.dfs[end][:t][end]
+0.0006296713607554238
+this will throw an error when trying to interpolate to negative numbers
+tf is negative, but within tolerances
+
+=================
+# Low Priority #
+=================

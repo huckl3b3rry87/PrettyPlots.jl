@@ -553,7 +553,7 @@ end
 mainSim(n,c;(:mode=>:open1))
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 4/13/2017, Last Modified: 6/22/2017 \n
+Date Create: 4/13/2017, Last Modified: 7/6/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 
@@ -566,7 +566,13 @@ function mainSim(n,c;kwargs...)
   end
 
   if n.r.eval_num>2;
-     anim = @animate for idx in 1:n.r.eval_num
+    if abs(n.r.dfs[end][:t][end]-n.r.dfs[end][:t][1]) < 0.2
+      warn("\n The time scale for the final optimization is too small to plot. \n")
+      num=n.r.eval_num-1;
+    else
+      num=n.r.eval_num
+    end
+     anim = @animate for idx in 1:num
        mainPlot(n,c,idx;(:mode=>mode))
     end
     cd(n.r.results_dir)
