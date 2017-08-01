@@ -567,7 +567,9 @@ function mainSim(n,c;kwargs...)
 
   if n.r.eval_num>2;
     if abs(n.r.dfs[end][:t][end]-n.r.dfs[end][:t][1]) < 0.2
-      warn("\n The time scale for the final optimization is too small to plot. \n")
+      warn("\n The time scale for the final optimization is too small to plot.\n
+                Deleting the final element in the results! \n ")
+      pop!(n.r.dfs)
       num=n.r.eval_num-1;
     else
       num=n.r.eval_num
