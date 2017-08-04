@@ -169,18 +169,18 @@ function vehiclePlot(n,c,idx,args...;kwargs...)
   kw = Dict(kwargs);
 
   # check to see if user wants to zoom
-  if !haskey(kw,:zoom); kw_=Dict(:zoom => false); zoom=get(kw_,:zoom,0);
+  if !haskey(kw,:zoom); zoom = false;
   else; zoom=get(kw,:zoom,0);
   end
 
   # check to see if user would like to add to an existing plot
-  if !haskey(kw,:append); kw_ = Dict(:append => false); append = get(kw_,:append,0);
+  if !haskey(kw,:append); append = false
   else; append = get(kw,:append,0);
   end
   if !append; pp=plot(0,leg=:false); else pp=args[1]; end
 
   # check to see if is a poster plot
-  if !haskey(kw,:posterPlot); kw_ = Dict(:posterPlot=>false); posterPlot=get(kw_,:posterPlot,0);
+  if !haskey(kw,:posterPlot); posterPlot=false;
   else; posterPlot=get(kw,:posterPlot,0);
   end
 

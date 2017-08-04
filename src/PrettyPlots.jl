@@ -33,5 +33,9 @@ export
     mainSim,
     posterP,
     posPlot,
-    vtPlot
+    vtPlot,
+
+    # Plots.jl exported functions
+    xlims!,
+    ylims!
 end # module
