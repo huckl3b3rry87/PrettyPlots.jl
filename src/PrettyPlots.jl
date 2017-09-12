@@ -3,6 +3,8 @@ module PrettyPlots
 using Colors
 using DataFrames
 using Plots
+import Plots.gr
+import Plots.pyplot
 gr(); # default backend
 using VehicleModels # need for parameters
 using NLOptControl  # need for resultsDir!()
