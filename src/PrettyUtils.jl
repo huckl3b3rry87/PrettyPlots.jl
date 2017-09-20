@@ -7,7 +7,7 @@ const _pretty_defaults = Dict(
     :simulate     =>false,       # bool for simulation
     :L            =>100,         # format for output plots
 
-    :mpc_lines    =>[(2.7,:blue,:solid),(2.7,:blue,:dash)],
+    :mpc_lines    =>[(2.7,:blue,:solid),(2.7,:red,:solid),(2.7,:darkgreen,:solid),(2.7,:yellow,:solid),(2.7,:blue,:solid),(2.7,:yellow,:solid),(2.7,:black,:solid),(2.7,:orange,:solid)],
     :mpc_markers  =>(:circle,:blueviolet,0.0,1.0),
     :plant_lines  =>[(4.3,:darkgreen,:solid),(4.3,:darkgreen,:dash)],
     :limit_lines  =>[(2.0,:deeppink1,:solid),(2.0,:deeppink1,:dash),(2.0,:blueviolet,:solid),(2.0,:blueviolet,:dash)],

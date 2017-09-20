@@ -5,10 +5,10 @@ Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 2/10/2017, Last Modified: 5/29/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-function allPlots(n;idx::Int64=1)
+function allPlots(n;idx::Int64=1,kwargs...)
   if !isdir(n.r.results_dir); resultsDir!(n); end
-  stp = [statePlot(n,idx,st) for st in 1:n.numStates];
-  ctp = [controlPlot(n,idx,ctr) for ctr in 1:n.numControls];
+  stp = [statePlot(n,idx,st;kwargs...) for st in 1:n.numStates];
+  ctp = [controlPlot(n,idx,ctr;kwargs...) for ctr in 1:n.numControls];
   all = [stp;ctp];
   h = plot(all...,size=_pretty_defaults[:size]);
   if !_pretty_defaults[:simulate]; savefig(string(n.r.results_dir,"main.",_pretty_defaults[:format])) end
@@ -20,9 +20,10 @@ stp=statePlot(n,r.eval_num,7);
 stp=statePlot(n,idx,st);
 stp=statePlot(n,idx,st;(:legend=>"test1"));
 stp=statePlot(n,idx,st,stp;(:append=>true));
+stp=statePlot(n,idx,st,stp;(:lims=>false));
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 2/10/2017, Last Modified: 5/28/2017 \n
+Date Create: 2/10/2017, Last Modified: 9/19/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function statePlot(n,idx::Int64,st::Int64,args...;kwargs...)
@@ -68,7 +69,14 @@ function statePlot(n,idx::Int64,st::Int64,args...;kwargs...)
 
   # plot the values TODO if there are no lims then you cannot really see the signal
 	if n.r.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
-  	plot!(n.r.dfs[idx][:t],n.r.dfs[idx][n.state.name[st]],marker=_pretty_defaults[:mpc_markers],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"));
+    if n.s.integrationMethod == :ps
+      for int in 1:n.Ni
+        plot!(n.r.t_polyPts[int],n.r.X_polyPts[st][int],line=_pretty_defaults[:mpc_lines][int], label=string("poly. # ", int))
+      end
+      scatter!(n.r.dfs[idx][:t],n.r.dfs[idx][n.state.name[st]],marker=_pretty_defaults[:mpc_markers],label=string(legend_string,"colloc. pts."))
+    else
+      plot!(n.r.dfs[idx][:t],n.r.dfs[idx][n.state.name[st]],marker=_pretty_defaults[:mpc_markers],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"))
+    end
 	end
   if _pretty_defaults[:plant]
 		# values
@@ -158,7 +166,7 @@ ctrp=controlPlot(n,idx,ctr,ctrp;(:append=>true));
 # to plot control signals
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 2/10/2017, Last Modified: 5/28/2017 \n
+Date Create: 2/10/2017, Last Modified: 9/19/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function controlPlot(n,idx::Int64,ctr::Int64,args...;kwargs...)
@@ -192,10 +200,17 @@ function controlPlot(n,idx::Int64,ctr::Int64,args...;kwargs...)
     if !isnan(n.CL[ctr]); plot!(t_vec,n.CL[ctr]*ones(_pretty_defaults[:L],1),line=_pretty_defaults[:limit_lines][1],label="min"); end
   end
 
-  # plot the values
-	if n.r.dfs[idx]!=nothing  && !_pretty_defaults[:plantOnly]
-  	plot!(n.r.dfs[idx][:t],n.r.dfs[idx][n.control.name[ctr]],line=_pretty_defaults[:mpc_lines][1],marker=_pretty_defaults[:mpc_markers],label=string(legend_string,"mpc"));
-	end
+  if n.r.dfs[idx]!=nothing  && !_pretty_defaults[:plantOnly]
+    if n.s.integrationMethod == :ps
+      for int in 1:n.Ni
+        plot!(n.r.t_polyPts[int],n.r.U_polyPts[ctr][int],line=_pretty_defaults[:mpc_lines][int], label=string("poly. # ", int))
+      end
+      scatter!(n.r.dfs[idx][:t],n.r.dfs[idx][n.control.name[ctr]],marker=_pretty_defaults[:mpc_markers],label=string(legend_string,"colloc. pts."))
+    else
+      plot!(n.r.dfs[idx][:t],n.r.dfs[idx][n.control.name[ctr]],marker=_pretty_defaults[:mpc_markers],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"))
+    end
+  end
+
   if _pretty_defaults[:plant]
 		# values
 		temp = [n.r.dfs_plant[jj][n.control.name[ctr]] for jj in 1:idx];
