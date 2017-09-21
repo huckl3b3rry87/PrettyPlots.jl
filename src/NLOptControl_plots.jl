@@ -1,3 +1,26 @@
+function adjust_axis(x_lim,y_lim)
+
+	# scaling factors
+	al_x = [0.05, 0.05];  # x axis (low, high)
+	al_y = [0.05, 0.05];  # y axis (low, high)
+
+	# additional axis movement
+	if x_lim[1]==0.0; a=-1; else a=0; end
+	if x_lim[2]==0.0; b=1; else b=0; end
+	if y_lim[1]==0.0; c=-1; else c=0; end
+	if y_lim[2]==0.0; d=1; else d=0; end
+
+	xlim = Float64[0,0]; ylim = Float64[0,0];
+	xlim[1] = x_lim[1]-abs(x_lim[1]*al_x[1])+a;
+	xlim[2] = x_lim[2]+abs(x_lim[2]*al_x[2])+b;
+	ylim[1] = y_lim[1]-abs(y_lim[1]*al_y[1])+c;
+	ylim[2] = y_lim[2]+abs(y_lim[2]*al_y[2])+d;
+
+	xlims!((xlim[1],xlim[2]))
+	ylims!((ylim[1],ylim[2]))
+end
+
+
 """
 allPlots(n;idx)
 --------------------------------------------------------------------------------------\n
@@ -23,7 +46,7 @@ stp=statePlot(n,idx,st,stp;(:append=>true));
 stp=statePlot(n,idx,st,stp;(:lims=>false));
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 2/10/2017, Last Modified: 9/19/2017 \n
+Date Create: 2/10/2017, Last Modified: 9/21/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function statePlot(n,idx::Int64,st::Int64,args...;kwargs...)
@@ -70,8 +93,13 @@ function statePlot(n,idx::Int64,st::Int64,args...;kwargs...)
   # plot the values TODO if there are no lims then you cannot really see the signal
 	if n.r.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
     if n.s.integrationMethod == :ps
+      int_color = 1
       for int in 1:n.Ni
-        plot!(n.r.t_polyPts[int],n.r.X_polyPts[st][int],line=_pretty_defaults[:mpc_lines][int], label=string("poly. # ", int))
+          if int_color > length(_pretty_defaults[:mpc_lines]) # reset colors
+            int_color = 1
+          end
+          plot!(n.r.t_polyPts[int],n.r.X_polyPts[st][int],line=_pretty_defaults[:mpc_lines][int_color], label=string("poly. # ", int))
+          int_color = int_color + 1
       end
       scatter!(n.r.dfs[idx][:t],n.r.dfs[idx][n.state.name[st]],marker=_pretty_defaults[:mpc_markers],label=string(legend_string,"colloc. pts."))
     else
@@ -202,8 +230,13 @@ function controlPlot(n,idx::Int64,ctr::Int64,args...;kwargs...)
 
   if n.r.dfs[idx]!=nothing  && !_pretty_defaults[:plantOnly]
     if n.s.integrationMethod == :ps
+      int_color = 1
       for int in 1:n.Ni
-        plot!(n.r.t_polyPts[int],n.r.U_polyPts[ctr][int],line=_pretty_defaults[:mpc_lines][int], label=string("poly. # ", int))
+        if int_color > length(_pretty_defaults[:mpc_lines]) # reset colors
+          int_color = 1  # reset colors
+        end
+        plot!(n.r.t_polyPts[int],n.r.U_polyPts[ctr][int],line=_pretty_defaults[:mpc_lines][int_color], label=string("poly. # ", int))
+        int_color = int_color + 1
       end
       scatter!(n.r.dfs[idx][:t],n.r.dfs[idx][n.control.name[ctr]],marker=_pretty_defaults[:mpc_markers],label=string(legend_string,"colloc. pts."))
     else
@@ -293,27 +326,4 @@ function optPlot(n)
 	xaxis!("Evaluation Number")
   savefig(string(n.r.results_dir,"optPlot.",_pretty_defaults[:format]))
   return opt
-end
-
-
-function adjust_axis(x_lim,y_lim)
-
-	# scaling factors
-	al_x = [0.05, 0.05];  # x axis (low, high)
-	al_y = [0.05, 0.05];  # y axis (low, high)
-
-	# additional axis movement
-	if x_lim[1]==0.0; a=-1; else a=0; end
-	if x_lim[2]==0.0; b=1; else b=0; end
-	if y_lim[1]==0.0; c=-1; else c=0; end
-	if y_lim[2]==0.0; d=1; else d=0; end
-
-	xlim = Float64[0,0]; ylim = Float64[0,0];
-	xlim[1] = x_lim[1]-abs(x_lim[1]*al_x[1])+a;
-	xlim[2] = x_lim[2]+abs(x_lim[2]*al_x[2])+b;
-	ylim[1] = y_lim[1]-abs(y_lim[1]*al_y[1])+c;
-	ylim[2] = y_lim[2]+abs(y_lim[2]*al_y[2])+d;
-
-	xlims!((xlim[1],xlim[2]))
-	ylims!((ylim[1],ylim[2]))
 end

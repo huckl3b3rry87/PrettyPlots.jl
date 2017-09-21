@@ -3,9 +3,11 @@ module PrettyPlots
 using Colors
 using DataFrames
 using Plots
-import Plots.gr
-import Plots.pyplot
-gr(); # default backend
+#import Plots.gr
+#import Plots.pyplot
+import Plots.xlims!, Plots.ylims!, Plots.plot
+#gr(); # default backend
+pyplot()
 using VehicleModels # need for parameters
 using NLOptControl  # need for resultsDir!()
 
@@ -39,5 +41,11 @@ export
 
     # Plots.jl exported functions
     xlims!,
-    ylims!
+    ylims!,
+    plot
+    #Plots.gui(),
+    #Plots.pyplot(),
+    #Plots.gr(),
+    #Plots.pgfplots()
+
 end # module

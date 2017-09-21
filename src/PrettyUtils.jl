@@ -1,13 +1,20 @@
 #lc=distinguishable_colors(10);
 const _pretty_defaults = Dict(
-    :size         =>(1800,1200), # size of figure
+    :size         =>(700,700), # size of figure
     :format       =>"png",       # format for output plots
     :plant        =>false,       # bool for simulation of plant as well as MPC
     :plantOnly    =>false,       # bool for plotting only the plant response
     :simulate     =>false,       # bool for simulation
     :L            =>100,         # format for output plots
 
-    :mpc_lines    =>[(2.7,:blue,:solid),(2.7,:red,:solid),(2.7,:darkgreen,:solid),(2.7,:yellow,:solid),(2.7,:blue,:solid),(2.7,:yellow,:solid),(2.7,:black,:solid),(2.7,:orange,:solid)],
+    :mpc_lines    =>[(2.7,:blue,:solid),(2.7,:red,:solid),(2.7,:darkgreen,:solid),
+                     (2.7,:yellow,:solid),(2.7,:black,:solid),(2.7,:firebrick,:solid),
+                     (2.7,:gold,:solid),(2.7,:greenyellow,:solid),(2.7,:hotpink,:solid),
+                     (2.7,:steelblue,:solid),(2.7,:aqua,:solid),(2.7,:teal,:solid),
+                     (2.7,:blue,:dash),(2.7,:red,:dash),(2.7,:darkgreen,:dash),
+                     (2.7,:yellow,:dash),(2.7,:black,:dash),(2.7,:firebrick,:dash),
+                     (2.7,:gold,:dash),(2.7,:greenyellow,:dash),(2.7,:hotpink,:dash),
+                     (2.7,:steelblue,:dash),(2.7,:aqua,:dash),(2.7,:teal,:dash)],
     :mpc_markers  =>(:circle,:blueviolet,0.0,1.0),
     :plant_lines  =>[(4.3,:darkgreen,:solid),(4.3,:darkgreen,:dash)],
     :limit_lines  =>[(2.0,:deeppink1,:solid),(2.0,:deeppink1,:dash),(2.0,:blueviolet,:solid),(2.0,:blueviolet,:dash)],
