@@ -3,5 +3,5 @@ Colors
 DataFrames
 Plots
 PyPlot
-VehicleModels
-NLOptControl
+VehicleModels 0.1.3+
+NLOptControl 0.1.3+
