@@ -33,7 +33,7 @@ function allPlots(n;idx::Int64=1,kwargs...)
   stp = [statePlot(n,idx,st;kwargs...) for st in 1:n.numStates];
   ctp = [controlPlot(n,idx,ctr;kwargs...) for ctr in 1:n.numControls];
 
-  if n.s.evalCostates && n.s.integrationMethod == :ps
+  if n.s.evalCostates && n.s.integrationMethod == :ps && n.s.evalConstraints
     csp = [costatePlot(n,idx,st;kwargs...) for st in 1:n.numStates];
     all = [stp;ctp;csp];
   else
@@ -345,6 +345,11 @@ Date Create: 11/10/2017, Last Modified: 11/10/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function costatesPlot(n;idx::Int64=1,kwargs...)
+  if !(n.s.evalCostates && n.s.integrationMethod == :ps && n.s.evalConstraints)
+    error("   if n.s.evalCostates && n.s.integrationMethod == :ps && n.s.evalConstraints  \n
+              must all be true.")
+  end
+
   if !isdir(n.r.results_dir); resultsDir!(n); end
 
   csp = [costatePlot(n,idx,st;kwargs...) for st in 1:n.numStates];
@@ -361,6 +366,10 @@ Date Create: 11/10/2017, Last Modified: 11/10/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function costatePlot(n,idx::Int64,st::Int64;kwargs...)
+  if !(n.s.evalCostates && n.s.integrationMethod == :ps && n.s.evalConstraints)
+    error("   if n.s.evalCostates && n.s.integrationMethod == :ps && n.s.evalConstraints  \n
+              must all be true.")
+  end
   kw = Dict(kwargs);
 
   # check to see if user would like to add to an existing plot
