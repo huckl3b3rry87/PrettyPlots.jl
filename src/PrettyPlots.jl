@@ -26,6 +26,8 @@ export
     # NLOptControl.jl plots
     statePlot,
     controlPlot,
+    costatesPlot,
+    costatesPlots,
     allPlots,
     adjust_axis,
     tPlot,

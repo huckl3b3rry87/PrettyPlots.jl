@@ -25,14 +25,21 @@ end
 allPlots(n;idx)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 2/10/2017, Last Modified: 5/29/2017 \n
+Date Create: 2/10/2017, Last Modified: 11/10/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function allPlots(n;idx::Int64=1,kwargs...)
   if !isdir(n.r.results_dir); resultsDir!(n); end
   stp = [statePlot(n,idx,st;kwargs...) for st in 1:n.numStates];
   ctp = [controlPlot(n,idx,ctr;kwargs...) for ctr in 1:n.numControls];
-  all = [stp;ctp];
+
+  if n.s.evalCostates && n.s.integrationMethod == :ps
+    csp = [costatePlot(n,idx,st;kwargs...) for st in 1:n.numStates];
+    all = [stp;ctp;csp];
+  else
+    all = [stp;ctp];
+  end
+
   h = plot(all...,size=_pretty_defaults[:size]);
   if !_pretty_defaults[:simulate]; savefig(string(n.r.results_dir,"main.",_pretty_defaults[:format])) end
   return h
@@ -52,7 +59,7 @@ Date Create: 2/10/2017, Last Modified: 9/21/2017 \n
 function statePlot(n,idx::Int64,st::Int64,args...;kwargs...)
   kw = Dict(kwargs);
 
-  # check to se if user would like to add to an existing plot
+  # check to see if user would like to add to an existing plot
   if !haskey(kw,:append); append=false;
   else; append = get(kw,:append,0);
   end
@@ -326,4 +333,75 @@ function optPlot(n)
 	xaxis!("Evaluation Number")
   savefig(string(n.r.results_dir,"optPlot.",_pretty_defaults[:format]))
   return opt
+end
+
+
+
+"""
+costatesPlot(n)
+--------------------------------------------------------------------------------------\n
+Author: Huckleberry Febbo, Graduate Student, University of Michigan
+Date Create: 11/10/2017, Last Modified: 11/10/2017 \n
+--------------------------------------------------------------------------------------\n
+"""
+function costatesPlot(n;idx::Int64=1,kwargs...)
+  if !isdir(n.r.results_dir); resultsDir!(n); end
+
+  csp = [costatePlot(n,idx,st;kwargs...) for st in 1:n.numStates];
+  h = plot(csp...,size=_pretty_defaults[:size])
+  if !_pretty_defaults[:simulate]; savefig(string(n.r.results_dir,"cs_main.",_pretty_defaults[:format])) end
+  return h
+end
+
+"""
+costatePlot(n,idx,st)
+--------------------------------------------------------------------------------------\n
+Author: Huckleberry Febbo, Graduate Student, University of Michigan
+Date Create: 11/10/2017, Last Modified: 11/10/2017 \n
+--------------------------------------------------------------------------------------\n
+"""
+function costatePlot(n,idx::Int64,st::Int64;kwargs...)
+  kw = Dict(kwargs);
+
+  # check to see if user would like to add to an existing plot
+  if !haskey(kw,:append); append=false;
+  else; append = get(kw,:append,0);
+  end
+  if !append; csp=plot(0,leg=:false); else csp=args[1]; end
+
+
+  # check to see if user would like to label legend
+  if !haskey(kw,:legend); legend_string = "";
+  else; legend_string = get(kw,:legend,0);
+  end
+
+	if n.r.dfs[idx]!=nothing
+  	t_vec=linspace(0.0,n.r.dfs[end][:t][end],_pretty_defaults[:L]);
+	else
+		t_vec=linspace(0.0,n.r.dfs_plant[end][:t][end],_pretty_defaults[:L]);
+	end
+
+  if n.s.integrationMethod == :ps
+    t_st_int = [n.r.t_st[n.Nck_cum[int]+1:n.Nck_cum[int+1]+1] for int in 1:n.Ni] # this is redundant in interpolateLagrange!()
+
+    int_color = 1
+    for int in 1:n.Ni
+        if int_color > length(_pretty_defaults[:mpc_lines]) # reset colors
+          int_color = 1
+        end
+        plot!(n.r.t_polyPts[int],n.r.CS_polyPts[st][int],line=_pretty_defaults[:mpc_lines][int_color], label=string("poly. # ", int))
+        int_color = int_color + 1
+        scatter!(t_st_int[int][1:end-1],n.r.CS[st][int],marker=_pretty_defaults[:mpc_markers],label=string(legend_string,"costate pts."))
+    end
+  #else # NOTE for now :tm methods do not have a costate option
+  #  plot!(n.r.dfs[idx][:t],n.r.CS[st],marker=_pretty_defaults[:mpc_markers],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"))
+  end
+
+  adjust_axis(xlims(),ylims());
+  xlims!(t_vec[1],t_vec[end]);
+  plot!(size=_pretty_defaults[:size]);
+  yaxis!(string(n.state.description[st]," costate")); xaxis!("time (s)");
+
+  if !_pretty_defaults[:simulate]; savefig(string(n.r.results_dir,n.state.name[st]," costate.",_pretty_defaults[:format])); end
+  return csp
 end
