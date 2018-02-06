@@ -296,14 +296,14 @@ function tPlot(n,idx::Int64,args...;kwargs...);
   end
 
   # to avoid a bunch of jumping around in the simulation
-	idx_max=length(r.dfs_opt);
+	idx_max=length(r.dfs_opt[:t_solve]);
 	if (idx_max<10); idx_max=10 end
 
 	# define variables
   T_solve = zeros(idx_max);                # solve time for each evaluation
-  L=length(r.dfs_opt);
+  L=length(r.dfs_opt[:t_solve]);
 
-  T_solve[1:L]=[r.dfs_opt[jj][:t_solve][1] for jj in 1:L];
+  T_solve[1:L]=[r.dfs_opt[:t_solve][jj] for jj in 1:L];
   scatter!(1:idx,T_solve[1:idx],marker=_pretty_defaults[:opt_marker],label=string(legend_string,"optimization times"))
 	plot!(1:length(T_solve),n.mpc.tex*ones(length(T_solve)),line=_pretty_defaults[:limit_lines][2],leg=:true,label="real-time threshhold",leg=:topright)
 
@@ -323,8 +323,8 @@ Date Create: 7/04/2017, Last Modified: 7/04/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function optPlot(n)
-  L=length(n.r.dfs_opt)
-  temp = [n.r.dfs_opt[jj][:obj_val] for jj in 1:L];
+  L=length(n.r.dfs_opt[:t_solve])
+  temp = [n.r.dfs_opt[:obj_val][jj] for jj in 1:L];
   val=[idx for tempM in temp for idx=tempM];
 
   opt=plot(1:L,val)
