@@ -4,6 +4,7 @@ const _pretty_defaults = Dict(
     :format       =>"png",       # format for output plots
     :plant        =>false,       # bool for simulation of plant as well as MPC
     :plantOnly    =>false,       # bool for plotting only the plant response
+    :polyPts      =>true,       # bool for plotting the individual polynomials
     :simulate     =>false,       # bool for simulation
     :L            =>100,         # format for output plots
 

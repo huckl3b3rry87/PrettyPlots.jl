@@ -99,7 +99,7 @@ function statePlot(n,idx::Int64,st::Int64,args...;kwargs...)
 
   # plot the values TODO if there are no lims then you cannot really see the signal
 	if n.r.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
-    if n.s.integrationMethod == :ps
+    if n.s.integrationMethod == :ps && _pretty_defaults[:polyPts]
       int_color = 1
       for int in 1:n.Ni
           if int_color > length(_pretty_defaults[:mpc_lines]) # reset colors
@@ -236,12 +236,12 @@ function controlPlot(n,idx::Int64,ctr::Int64,args...;kwargs...)
   end
 
   if n.r.dfs[idx]!=nothing  && !_pretty_defaults[:plantOnly]
-    if n.s.integrationMethod == :ps
+    if n.s.integrationMethod == :ps && _pretty_defaults[:polyPts]
       int_color = 1
       for int in 1:n.Ni
         if int_color > length(_pretty_defaults[:mpc_lines]) # reset colors
           int_color = 1  # reset colors
-        end
+        end  # TODO shift t_polyPts to t0, currently starting at 0
         plot!(n.r.t_polyPts[int],n.r.U_polyPts[ctr][int],line=_pretty_defaults[:mpc_lines][int_color], label=string("poly. # ", int))
         int_color = int_color + 1
       end
