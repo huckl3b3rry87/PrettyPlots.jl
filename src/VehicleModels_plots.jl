@@ -575,6 +575,10 @@ function mainSim(n,c;kwargs...)
     else
       num=n.r.eval_num
     end
+      if n.r.eval_num > length(n.r.dfs_plant)
+        warn("Reducing the number of frames. n.r.eval_num > length(n.r.dfs_plant) ")
+        num = length(n.r.df_plant)
+      end
      anim = @animate for idx in 1:num
        mainPlot(n,c,idx;(:mode=>mode))
     end
@@ -648,12 +652,16 @@ function posterP(n,c)
 
   # static plots for each frame
   idx=r.eval_num;
+  if idx > length(n.r.dfs_opt[:tSolve])
+    warn("Reducing the index in tPlot!() ")
+    idxT = length(n.r.dfs_opt[:tSolve])
+  end
   sap=statePlot(n,idx,6)
   longv=statePlot(n,idx,7)
   axp=axLimsPlot(n,pa,idx); # add nonlinear acceleration limits
   axp=statePlot(n,idx,8,axp;(:lims=>false),(:append=>true));
   pp=statePlot(n,idx,1,2;(:lims=>false));
-  if _pretty_defaults[:plant]; tp=tPlot(n,idx); else; tp=plot(0,leg=:false); end
+  if _pretty_defaults[:plant]; tp=tPlot(n,idxT); else; tp=plot(0,leg=:false); end
   vt=vtPlot(n,pa,c,idx)
 
   # dynamic plots ( maybe only update every 5 frames or so)
