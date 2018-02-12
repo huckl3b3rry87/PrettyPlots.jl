@@ -264,6 +264,13 @@ function vtPlot(n,pa,c,idx::Int64)
 
 	@unpack_Vpara pa
 
+  if idx > length(n.r.dfs)
+    warn("Cannot plot idx = ", idx, " because length(n.r.dfs) = ", length(n.r.dfs), ". \n
+          Skipping idx in vtPlot().")
+    vt = plot(0,leg=:false)
+    return vt
+  end
+
   if r.dfs[idx]!=nothing
     t_vec=linspace(0.0,max(5,ceil(r.dfs[end][:t][end]/1)*1),_pretty_defaults[:L]);
   else
@@ -335,6 +342,12 @@ function axLimsPlot(n,pa,idx::Int64,args...;kwargs...)
   else; append = get(kw,:append,0);
   end
   if !append; axp=plot(0,leg=:false); else axp=args[1]; end
+
+  if idx > length(n.r.dfs)
+    warn("Cannot plot idx = ", idx, " because length(n.r.dfs) = ", length(n.r.dfs), ". \n
+          Skipping idx in axLimsPlot().")
+    return axp
+  end
 
   @unpack_Vpara pa
 
@@ -427,6 +440,12 @@ function lidarPlot(r,c,idx,args...;kwargs...)
   end
   if !append; pp=plot(0,leg=:false); else pp=args[1]; end
 
+  if idx > length(r.dfs)
+    warn("Cannot plot idx = ", idx, " because length(r.dfs) = ", length(r.dfs), ". \n
+          Skipping idx in lidarPlot().")
+    return pp
+  end
+
   # plot the LiDAR
   if _pretty_defaults[:plant]
     X_v = r.dfs_plant[idx][:x][1]  # using the begining of the simulated data from the vehicle model
@@ -479,6 +498,12 @@ function posPlot(n,c,idx;kwargs...)
   if !isempty(c.t.X); pp=trackPlot(c;(:smallMarkers=>smallMarkers)); else pp=plot(0,leg=:false); end  # track
   if !isempty(c.m.Lr); pp=lidarPlot(r,c,idx,pp;(:append=>true)); end  # lidar
 
+  if idx > length(n.r.dfs)
+    warn("Cannot plot idx = ", idx, " because length(n.r.dfs) = ", length(n.r.dfs), ". \n
+          Skipping idx in posPlot().")
+    return pp
+  end
+
   pp=statePlot(n,idx,1,2,pp;(:lims=>false),(:append=>true)); # vehicle trajectory
   pp=obstaclePlot(n,c,idx,pp;(:append=>true),(:smallMarkers=>smallMarkers),(:obstacleMiss=>obstacleMiss));               # obstacles
   pp=vehiclePlot(n,c,idx,pp;(:append=>true),(:zoom=>zoom),(:setLims=>setLims),(:smallMarkers=>smallMarkers));  # vehicle
@@ -491,7 +516,7 @@ end
 main=mainPlot(n,c,idx;kwargs...)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 3/11/2017, Last Modified: 6/22/2017 \n
+Date Create: 3/11/2017, Last Modified: 2/12/2018 \n
 --------------------------------------------------------------------------------------\n
 """
 function mainPlot(n,c,idx;kwargs...)
@@ -579,6 +604,13 @@ function mainSim(n,c;kwargs...)
         warn("Reducing the number of frames. n.r.eval_num > length(n.r.dfs_plant) ")
         num = length(n.r.df_plant)
       end
+
+      if num > length(r.dfs)
+        warn("Cannot plot idx = ", num, " because length(r.dfs) = ", length(r.dfs), "\n
+              skipping num in mainSim().")
+          num = length(r.dfs)
+      end
+
      anim = @animate for idx in 1:num
        mainPlot(n,c,idx;(:mode=>mode))
     end
@@ -651,17 +683,15 @@ function posterP(n,c)
   plotSettings(;(:simulate=>false),(:plant=>true),(:plantOnly=>true));
 
   # static plots for each frame
-  idx=r.eval_num;
-  if idx > length(n.r.dfs_opt[:tSolve])
-    warn("Reducing the index in tPlot!() ")
-    idxT = length(n.r.dfs_opt[:tSolve])
-  end
+  idx = length(n.r.dfs)
+  idxT = length(n.r.dfs_opt[:tSolve])
+
   sap=statePlot(n,idx,6)
   longv=statePlot(n,idx,7)
   axp=axLimsPlot(n,pa,idx); # add nonlinear acceleration limits
   axp=statePlot(n,idx,8,axp;(:lims=>false),(:append=>true));
   pp=statePlot(n,idx,1,2;(:lims=>false));
-  if _pretty_defaults[:plant]; tp=tPlot(n,idxT); else; tp=plot(0,leg=:false); end
+  if _pretty_defaults[:plant]; tp=tPlot(n,idx); else; tp=plot(0,leg=:false); end
   vt=vtPlot(n,pa,c,idx)
 
   # dynamic plots ( maybe only update every 5 frames or so)

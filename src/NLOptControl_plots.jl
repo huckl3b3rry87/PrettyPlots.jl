@@ -65,6 +65,12 @@ function statePlot(n,idx::Int64,st::Int64,args...;kwargs...)
   end
   if !append; stp=plot(0,leg=:false); else stp=args[1]; end
 
+  if idx > length(n.r.dfs)
+    warn("Cannot plot idx = ", idx, " because length(n.r.dfs) = ", length(n.r.dfs), ". \n
+          Skipping idx in statePlot().")
+    return stp
+  end
+
   # check to see if user would like to plot limits
   if !haskey(kw,:lims); lims=true;
   else; lims=get(kw,:lims,0);
@@ -151,6 +157,12 @@ function statePlot(n,idx::Int64,st1::Int64,st2::Int64,args...;kwargs...)
   end
   if !append; stp=plot(0,leg=:false); else stp=args[1]; end
 
+  if idx > length(n.r.dfs)
+    warn("Cannot plot idx = ", idx, " because length(n.r.dfs) = ", length(n.r.dfs), ". \n
+          Skipping idx in statePlot().")
+    return stp
+  end
+
   # check to see if user would like to plot limits
   if !haskey(kw,:lims); kw_ = Dict(:lims => true); lims = get(kw_,:lims,0);
   else; lims = get(kw,:lims,0);
@@ -212,6 +224,12 @@ function controlPlot(n,idx::Int64,ctr::Int64,args...;kwargs...)
   else; append = get(kw,:append,0);
   end
   if !append; ctrp=plot(0,leg=:false); else ctrp=args[1]; end
+
+  if idx > length(n.r.dfs)
+    warn("Cannot plot idx = ", idx, " because length(n.r.dfs) = ", length(n.r.dfs), ". \n
+          Skipping idx in controlPlot().")
+    return ctrp
+  end
 
   # check to see if user would like to plot limits
   if !haskey(kw,:lims); kw_ = Dict(:lims => true); lims = get(kw_,:lims,0);
@@ -291,27 +309,30 @@ function tPlot(n,idx::Int64,args...;kwargs...);
   if !append; tp=plot(0,leg=:false); else tp=args[1]; end
 
   if idx > length(r.dfs_opt[:tSolve])
-    warn("cannot add to tPlot!(). idx > length(r.dfs_opt[:tSolve])")
-  else
-    # check to see if user would like to label legend
-    if !haskey(kw,:legend);legend_string="";
-    else; legend_string = get(kw,:legend,0);
-    end
-
-    # to avoid a bunch of jumping around in the simulation
-  	idx_max=length(r.dfs_opt[:tSolve]);
-  	if (idx_max<10); idx_max=10 end
-
-    scatter!(1:idx,r.dfs_opt[:tSolve][1:idx],marker=_pretty_defaults[:opt_marker],label=string(legend_string,"optimization times"))
-  	plot!(1:length(r.dfs_opt[:tSolve]),n.mpc.tex*ones(length(r.dfs_opt[:tSolve])),line=_pretty_defaults[:limit_lines][2],leg=:true,label="real-time threshhold",leg=:topright)
-
-  	ylims!(0,max(n.mpc.tex*1.2, maximum(r.dfs_opt[:tSolve])))
-    xlims!(1,length(r.dfs_opt[:tSolve]))
-  	yaxis!("Optimization Time (s)")
-  	xaxis!("Evaluation Number")
-    plot!(size=_pretty_defaults[:size]);
-  	if !_pretty_defaults[:simulate] savefig(string(n.r.results_dir,"tplot.",_pretty_defaults[:format])) end
+      warn("Cannot plot idx = ", idx, " because length(r.dfs_opt[:tSolve]) = ", length(r.dfs_opt[:tSolve]), ". \n
+            Skipping idx in tPlot!().")
+      return tp
   end
+  
+  # check to see if user would like to label legend
+  if !haskey(kw,:legend);legend_string="";
+  else; legend_string = get(kw,:legend,0);
+  end
+
+  # to avoid a bunch of jumping around in the simulation
+	idx_max=length(r.dfs_opt[:tSolve]);
+	if (idx_max<10); idx_max=10 end
+
+  scatter!(1:idx,r.dfs_opt[:tSolve][1:idx],marker=_pretty_defaults[:opt_marker],label=string(legend_string,"optimization times"))
+	plot!(1:length(r.dfs_opt[:tSolve]),n.mpc.tex*ones(length(r.dfs_opt[:tSolve])),line=_pretty_defaults[:limit_lines][2],leg=:true,label="real-time threshhold",leg=:topright)
+
+	ylims!(0,max(n.mpc.tex*1.2, maximum(r.dfs_opt[:tSolve])))
+  xlims!(1,length(r.dfs_opt[:tSolve]))
+	yaxis!("Optimization Time (s)")
+	xaxis!("Evaluation Number")
+  plot!(size=_pretty_defaults[:size]);
+	if !_pretty_defaults[:simulate] savefig(string(n.r.results_dir,"tplot.",_pretty_defaults[:format])) end
+
 	return tp
 end
 
