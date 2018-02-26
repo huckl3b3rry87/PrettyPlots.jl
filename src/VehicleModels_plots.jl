@@ -47,31 +47,31 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
   if basic
     pp=plot(0,leg=:false)
 
-    if c.g.name!=:NA  # TODO remove redundant code
+    if typeof(c["goal"]["x"])==Float64  # TODO remove redundant code
       if isnan(n.XF_tol[1]); rg=1; else rg=n.XF_tol[1]; end
       if !posterPlot || idx ==r.eval_num
         pts = Plots.partialcircle(0,2π,100,rg);
         x, y = Plots.unzip(pts);
-        x += c.g.x_ref;  y += c.g.y_ref;
+        x += c["goal"]["x"];  y += c["g"]["y"];
         pts = collect(zip(x, y));
         if !smallMarkers  #TODO get ride of this-> will not be a legend for this case
-          scatter!((c.g.x_ref,c.g.y_ref),marker=_pretty_defaults[:goal_marker],label="Goal")
+          scatter!((c["goal"]["x"],c["goal"]["y"]),marker=_pretty_defaults[:goal_marker],label="Goal")
         end
         plot!(pts,line=_pretty_defaults[:goal_line],fill=_pretty_defaults[:goal_fill],leg=true,label="")
       end
     end
 
-    if !isempty(c.o.A)
-      for i in 1:length(c.o.A)
+    if !isempty(c["obstacles"]["A"])
+      for i in 1:length(c["obstacles"]["A"])
           # create an ellipse
-          pts = Plots.partialcircle(0,2π,100,c.o.A[i])
+          pts = Plots.partialcircle(0,2π,100,c["obstacles"]["A"][i])
           x, y = Plots.unzip(pts)
           tc=0;
-          x += c.o.X0[i] + c.o.s_x[i]*tc;
-          y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*tc;
+          x += c["obstacles"]["xi"][i] + c["obstacles"]["ux"][i]*tc;
+          y = c["obstacles"]["B"][i]/c["obstacles"]["A"][i]*y + c["obstacles"]["yi"][i] + c["obstacles"]["uy"][i]*tc;
           pts = collect(zip(x, y))
           if i==1
-            scatter!((c.o.X0[i],c.o.Y0[i]),marker=_pretty_defaults[:obstacle_marker],label="Obstacles")
+            scatter!((c["obstacles"]["xi"][i],c["obstacles"]["yi"][i]),marker=_pretty_defaults[:obstacle_marker],label="Obstacles")
           end
           plot!(pts,line=_pretty_defaults[:obstacle_line],fill=_pretty_defaults[:obstacle_fill],leg=true,label="") #line=(3.0,0.0,:solid,:red)
         #  plot!(pts,line=(4.0,0.0,:solid,:red),fill=(0, 1, :red),leg=true,label="")
@@ -85,28 +85,28 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
     if !append; pp=plot(0,leg=:false); else pp=args[1]; end
 
     # plot the goal; assuming same in x and y
-    if c.g.name!=:NA  # TODO remove redundant code
+    if typeof(c["goal"]["x"])==Float64 # TODO remove redundant code
       if isnan(n.XF_tol[1]); rg=1; else rg=n.XF_tol[1]; end
       if !posterPlot || idx ==r.eval_num
         pts = Plots.partialcircle(0,2π,100,rg);
         x, y = Plots.unzip(pts);
-        x += c.g.x_ref;  y += c.g.y_ref;
+        x += c["goal"]["x"];  y += c["goal"]["y"];
         pts = collect(zip(x, y));
         if !smallMarkers  #TODO get ride of this-> will not be a legend for this case
-          scatter!((c.g.x_ref,c.g.y_ref),marker=_pretty_defaults[:goal_marker],label="Goal")
+          scatter!((c["goal"]["x"],c["goal"]["y"]),marker=_pretty_defaults[:goal_marker],label="Goal")
         end
         plot!(pts,line=_pretty_defaults[:goal_line],fill=_pretty_defaults[:goal_fill],leg=true,label="")
       end
     end
 
-    if c.o.name!=:NA
-      for i in 1:length(c.o.A)
+    if typeof(c["obstacles"]["A"][1])==Float64
+      for i in 1:length(c["obstacles"]["A"])
         # create an ellipse
-        pts = Plots.partialcircle(0,2π,100,c.o.A[i])
+        pts = Plots.partialcircle(0,2π,100,c["obstacles"]["A"][i])
         x, y = Plots.unzip(pts)
         if _pretty_defaults[:plant]
-          x += c.o.X0[i] + c.o.s_x[i]*r.dfs_plant[idx][:t][end];
-          y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*r.dfs_plant[idx][:t][end];
+          x += c["obstacles"]["xi"][i] + c["obstacles"]["ux"][i]*r.dfs_plant[idx][:t][end];
+          y = c["obstacles"]["B"][i]/c["obstacles"]["A"][i]*y + c["obstacles"]["yi"][i] + c["obstacles"]["uy"][i]*r.dfs_plant[idx][:t][end];
         else
           if r.dfs[idx]!=nothing
             tc=r.dfs[idx][:t][end];
@@ -114,19 +114,19 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
             tc=0;
             if idx!=1; warn("\n Obstacles set to inital condition for current frame. \n") end
           end
-          x += c.o.X0[i] + c.o.s_x[i]*tc;
-          y = c.o.B[i]/c.o.A[i]*y + c.o.Y0[i] + c.o.s_y[i]*tc;
+          x += c["obstacles"]["xi"][i] + c["obstacles"]["ux"][i]*tc;
+          y = c["obstacles"]["B"][i]/c["obstacles"]["A"][i]*y + c["obstacles"]["yi"][i] + c["obstacles"]["uy"][i]*tc;
         end
         pts=collect(zip(x, y))
-        X=c.o.X0[i] + c.o.s_x[i]*r.dfs_plant[idx][:t][end];
-        Y=c.o.Y0[i] + c.o.s_y[i]*r.dfs_plant[idx][:t][end];
+        X=c["obstacles"]["xi"][i] + c["obstacles"]["ux"][i]*r.dfs_plant[idx][:t][end];
+        Y=c["obstacles"]["yi"][i] + c["obstacles"]["uy"][i]*r.dfs_plant[idx][:t][end];
         if posterPlot
           shade=idx/r.eval_num;
           if idx==r.eval_num && i==1
             scatter!((X,Y),marker=_pretty_defaults[:obstacle_marker],label="Obstacles")
           end
           plot!(pts,line=_pretty_defaults[:obstacle_line],fill=(0,shade,:red),leg=true,label="")
-          annotate!(X,Y,text(string(idx*c.m.tex,"s"),10,:black,:center))
+          annotate!(X,Y,text(string(idx*c["misc"]["tex"],"s"),10,:black,:center))
         else
           if i==1 && !smallMarkers
             scatter!((X,Y),marker=_pretty_defaults[:obstacle_marker],label="Obstacles")
@@ -240,13 +240,13 @@ function vehiclePlot(n,c,idx,args...;kwargs...)
   end
 
   if posterPlot
-    t=idx*c.m.tex;
+    t=idx*c["misc"]["tex"];
     annotate!(X_v,Y_v-4,text(string("t=",t," s"),10,:black,:center))
   end
 
   if setLims || posterPlot
-    xlims!(c.m.Xlims[1],c.m.Xlims[2]);
-    ylims!(c.m.Ylims[1],c.m.Ylims[2]);
+    xlims!(c["misc"]["Xlims"][1],c["misc"]["Xlims"][2]);
+    ylims!(c["misc"]["Ylims"][1],c["misc"]["Ylims"][2]);
   end
 
   if !_pretty_defaults[:simulate]; savefig(string(r.results_dir,"x_vs_y",".",_pretty_defaults[:format])); end
@@ -281,10 +281,10 @@ function vtPlot(n,pa,c,idx::Int64)
 
   if r.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
     V=r.dfs[idx][:v];R=r.dfs[idx][:r];SA=r.dfs[idx][:sa];
-    if c.m.model!=:ThreeDOFv1
+    if c["misc"]["model"]!=:ThreeDOFv1
       Ax=r.dfs[idx][:ax]; U=r.dfs[idx][:ux];
     else # constain speed (the model is not optimizing speed)
-      U=c.m.UX*ones(length(V)); Ax=zeros(length(V));
+      U=c["misc"]["ux"]*ones(length(V)); Ax=zeros(length(V));
     end
     plot!(r.dfs[idx][:t],@FZ_RL(),line=_pretty_defaults[:mpc_lines][1],label="RL-mpc");
     plot!(r.dfs[idx][:t],@FZ_RR(),line=_pretty_defaults[:mpc_lines][2],label="RR-mpc");
@@ -293,14 +293,14 @@ function vtPlot(n,pa,c,idx::Int64)
     temp = [r.dfs_plant[jj][:v] for jj in 1:idx]; # V
     V=[idx for tempM in temp for idx=tempM];
 
-    if c.m.model!=:ThreeDOFv1
+    if c["misc"]["model"]!=:ThreeDOFv1
       temp = [r.dfs_plant[jj][:ux] for jj in 1:idx]; # ux
       U=[idx for tempM in temp for idx=tempM];
 
       temp = [r.dfs_plant[jj][:ax] for jj in 1:idx]; # ax
       Ax=[idx for tempM in temp for idx=tempM];
     else # constain speed ( the model is not optimizing speed)
-      U=c.m.UX*ones(length(V)); Ax=zeros(length(V));
+      U=c["misc"]["ux"]*ones(length(V)); Ax=zeros(length(V));
     end
 
     temp = [r.dfs_plant[jj][:r] for jj in 1:idx]; # r
@@ -392,7 +392,7 @@ Date Create: 3/28/2017, Last Modified: 5/1/2017 \n
 """
 function trackPlot(c,args...;kwargs...)
   kw = Dict(kwargs);
-  s=Settings();
+  # s=Settings(); NOTE commented out
 
   # check to see if user would like to add to an existing plot
   if !haskey(kw,:append); append=false;
@@ -406,13 +406,13 @@ function trackPlot(c,args...;kwargs...)
 
   if !append; pp=plot(0,leg=:false); else pp=args[1]; end
 
-  if c.t.func==:poly
-    f(y)=c.t.a[1] + c.t.a[2]*y + c.t.a[3]*y^2 + c.t.a[4]*y^3 + c.t.a[5]*y^4;
-    Y=c.t.Y;
+  if c["track"]["func"]==:poly
+    f(y)=c["track"]["a"][1] + c["track"]["a"][2]*y + c["track"]["a"][3]*y^2 + c["track"]["a"][4]*y^3 + c["track"]["a"][5]*y^4;
+    Y=c["track"]["Y"];
     X=f.(Y);
-  elseif c.t.func==:fourier
-    ff(x)=c.t.a[1]*sin(c.t.b[1]*x+c.t.c[1]) + c.t.a[2]*sin(c.t.b[2]*x+c.t.c[2]) + c.t.a[3]*sin(c.t.b[3]*x+c.t.c[3]) + c.t.a[4]*sin(c.t.b[4]*x+c.t.c[4]) + c.t.a[5]*sin(c.t.b[5]*x+c.t.c[5]) + c.t.a[6]*sin(c.t.b[6]*x+c.t.c[6]) + c.t.a[7]*sin(c.t.b[7]*x+c.t.c[7]) + c.t.a[8]*sin(c.t.b[8]*x+c.t.c[8])+c.t.y0;
-    X=c.t.X;
+  elseif c["track"]["func"]==:fourier
+    ff(x)=c["track"]["a"][1]*sin(c["track"]["b"][1]*x+c["track"]["c"][1]) + c["track"]["a"][2]*sin(c["track"]["b"][2]*x+c["track"]["c"][2]) + c["track"]["a"][3]*sin(c["track"]["b"][3]*x+c["track"]["c"][3]) + c["track"]["a"][4]*sin(c["track"]["b"][4]*x+c["track"]["c"][4]) + c["track"]["a"][5]*sin(c["track"]["b"][5]*x+c["track"]["c"][5]) + c["track"]["a"][6]*sin(c["track"]["b"][6]*x+c["track"]["c"][6]) + c["track"]["a"][7]*sin(c["track"]["b"][7]*x+c["track"]["c"][7]) + c["track"]["a"][8]*sin(c["track"]["b"][8]*x+c["track"]["c"][8])+c["track"]["y0"];
+    X=c["track"]["X"];
     Y=ff.(X);
   end
 
@@ -457,7 +457,7 @@ function lidarPlot(r,c,idx,args...;kwargs...)
     PSI_v = r.dfs[idx][:psi][1]-pi/2
   end
 
-  pts = Plots.partialcircle(PSI_v-pi,PSI_v+pi,50,c.m.Lr);
+  pts = Plots.partialcircle(PSI_v-pi,PSI_v+pi,50,c["misc"]["Lr"]);
   x, y = Plots.unzip(pts);
   x += X_v;  y += Y_v;
   pts = collect(zip(x, y));
@@ -495,8 +495,8 @@ function posPlot(n,c,idx;kwargs...)
   else;obstacleMiss=get(kw,:obstacleMiss,0);
   end
 
-  if !isempty(c.t.X); pp=trackPlot(c;(:smallMarkers=>smallMarkers)); else pp=plot(0,leg=:false); end  # track
-  if !isempty(c.m.Lr); pp=lidarPlot(r,c,idx,pp;(:append=>true)); end  # lidar
+  if haskey(c,"track"); pp=trackPlot(c;(:smallMarkers=>smallMarkers)); else pp=plot(0,leg=:false); end  # track
+  if haskey(c["misc"],"Lr"); pp=lidarPlot(r,c,idx,pp;(:append=>true)); end  # lidar
 
   if idx > length(n.r.dfs)
     warn("Cannot plot idx = ", idx, " because length(n.r.dfs) = ", length(n.r.dfs), ". \n
@@ -584,14 +584,16 @@ Date Create: 4/13/2017, Last Modified: 7/6/2017 \n
 
 function mainSim(n,c;kwargs...)
   r=n.r;
-
+kwargs=(:mode=>:open1)
   kw = Dict(kwargs);
   if !haskey(kw,:mode);error("select a mode for the simulation \n")
   else; mode=get(kw,:mode,0);
   end
 
   if n.r.eval_num>2;
-  #  if typeof(n.r.dfs[end]) != Void
+    if typeof(n.r.dfs[end]) == nothing || typeof(n.r.dfs[end]) == Void
+      pop!(n.r.dfs)
+    end # assuming there is only one nothing
     if abs(n.r.dfs[end][:t][end]-n.r.dfs[end][:t][1]) < 0.2
       warn("\n The time scale for the final optimization is too small to plot.\n
                 Deleting the final element in the results! \n ")
