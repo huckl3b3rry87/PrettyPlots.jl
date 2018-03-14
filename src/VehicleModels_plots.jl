@@ -604,7 +604,7 @@ kwargs=(:mode=>:open1)
     end
       if n.r.eval_num > length(n.r.dfs_plant)
         warn("Reducing the number of frames. n.r.eval_num > length(n.r.dfs_plant) ")
-        num = length(n.r.df_plant)
+        num = length(n.r.dfs_plant)
       end
 
       if num > length(r.dfs)
