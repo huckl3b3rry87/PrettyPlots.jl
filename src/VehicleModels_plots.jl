@@ -55,7 +55,7 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
         x += c["goal"]["x"];  y += c["g"]["y"];
         pts = collect(zip(x, y));
         if !smallMarkers  #TODO get ride of this-> will not be a legend for this case
-          scatter!((c["goal"]["x"],c["goal"]["y"]),marker=_pretty_defaults[:goal_marker],label="Goal")
+          scatter!((c["goal"]["x"],c["goal"]["yVal"]),marker=_pretty_defaults[:goal_marker],label="Goal")
         end
         plot!(pts,line=_pretty_defaults[:goal_line],fill=_pretty_defaults[:goal_fill],leg=true,label="")
       end
@@ -90,10 +90,10 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
       if !posterPlot || idx ==r.eval_num
         pts = Plots.partialcircle(0,2π,100,rg);
         x, y = Plots.unzip(pts);
-        x += c["goal"]["x"];  y += c["goal"]["y"];
+        x += c["goal"]["x"];  y += c["goal"]["yVal"];
         pts = collect(zip(x, y));
         if !smallMarkers  #TODO get ride of this-> will not be a legend for this case
-          scatter!((c["goal"]["x"],c["goal"]["y"]),marker=_pretty_defaults[:goal_marker],label="Goal")
+          scatter!((c["goal"]["x"],c["goal"]["yVal"]),marker=_pretty_defaults[:goal_marker],label="Goal")
         end
         plot!(pts,line=_pretty_defaults[:goal_line],fill=_pretty_defaults[:goal_fill],leg=true,label="")
       end
