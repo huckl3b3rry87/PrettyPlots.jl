@@ -67,11 +67,11 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
           pts = Plots.partialcircle(0,2π,100,c["obstacle"]["radius"][i])
           x, y = Plots.unzip(pts)
           tc=0;
-          x += c["obstacle"]["xi"][i] + c["obstacle"]["ux"][i]*tc;
-          y = c["obstacle"]["radius"][i]/c["obstacle"]["radius"][i]*y + c["obstacle"]["yi"][i] + c["obstacle"]["uy"][i]*tc;
+          x += c["obstacle"]["x0"][i] + c["obstacle"]["vx"][i]*tc;
+          y = c["obstacle"]["radius"][i]/c["obstacle"]["radius"][i]*y + c["obstacle"]["y0"][i] + c["obstacle"]["vy"][i]*tc;
           pts = collect(zip(x, y))
           if i==1
-            scatter!((c["obstacle"]["xi"][i],c["obstacle"]["yi"][i]),marker=_pretty_defaults[:obstacle_marker],label="Obstacles")
+            scatter!((c["obstacle"]["x0"][i],c["obstacle"]["y0"][i]),marker=_pretty_defaults[:obstacle_marker],label="Obstacles")
           end
           plot!(pts,line=_pretty_defaults[:obstacle_line],fill=_pretty_defaults[:obstacle_fill],leg=true,label="") #line=(3.0,0.0,:solid,:red)
         #  plot!(pts,line=(4.0,0.0,:solid,:red),fill=(0, 1, :red),leg=true,label="")
@@ -105,8 +105,8 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
         pts = Plots.partialcircle(0,2π,100,c["obstacle"]["radius"][i])
         x, y = Plots.unzip(pts)
         if _pretty_defaults[:plant]
-          x += c["obstacle"]["xi"][i] + c["obstacle"]["ux"][i]*r.dfs_plant[idx][:t][end];
-          y = c["obstacle"]["radius"][i]/c["obstacle"]["radius"][i]*y + c["obstacle"]["yi"][i] + c["obstacle"]["uy"][i]*r.dfs_plant[idx][:t][end];
+          x += c["obstacle"]["x0"][i] + c["obstacle"]["vx"][i]*r.dfs_plant[idx][:t][end];
+          y = c["obstacle"]["radius"][i]/c["obstacle"]["radius"][i]*y + c["obstacle"]["y0"][i] + c["obstacle"]["vy"][i]*r.dfs_plant[idx][:t][end];
         else
           if r.dfs[idx]!=nothing
             tc=r.dfs[idx][:t][end];
@@ -114,12 +114,12 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
             tc=0;
             if idx!=1; warn("\n Obstacles set to inital condition for current frame. \n") end
           end
-          x += c["obstacle"]["xi"][i] + c["obstacle"]["ux"][i]*tc;
-          y = c["obstacle"]["radius"][i]/c["obstacle"]["radius"][i]*y + c["obstacle"]["yi"][i] + c["obstacle"]["uy"][i]*tc;
+          x += c["obstacle"]["x0"][i] + c["obstacle"]["vx"][i]*tc;
+          y = c["obstacle"]["radius"][i]/c["obstacle"]["radius"][i]*y + c["obstacle"]["y0"][i] + c["obstacle"]["vy"][i]*tc;
         end
         pts=collect(zip(x, y))
-        X=c["obstacle"]["xi"][i] + c["obstacle"]["ux"][i]*r.dfs_plant[idx][:t][end];
-        Y=c["obstacle"]["yi"][i] + c["obstacle"]["uy"][i]*r.dfs_plant[idx][:t][end];
+        X=c["obstacle"]["x0"][i] + c["obstacle"]["vx"][i]*r.dfs_plant[idx][:t][end];
+        Y=c["obstacle"]["y0"][i] + c["obstacle"]["vy"][i]*r.dfs_plant[idx][:t][end];
         if posterPlot
           shade=idx/r.eval_num;
           if idx==r.eval_num && i==1
