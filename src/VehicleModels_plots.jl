@@ -61,17 +61,17 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
       end
     end
 
-    if !isempty(c["obstacles"]["A"])
-      for i in 1:length(c["obstacles"]["A"])
+    if !isempty(c["obstacle"]["A"])
+      for i in 1:length(c["obstacle"]["A"])
           # create an ellipse
-          pts = Plots.partialcircle(0,2π,100,c["obstacles"]["A"][i])
+          pts = Plots.partialcircle(0,2π,100,c["obstacle"]["A"][i])
           x, y = Plots.unzip(pts)
           tc=0;
-          x += c["obstacles"]["xi"][i] + c["obstacles"]["ux"][i]*tc;
-          y = c["obstacles"]["B"][i]/c["obstacles"]["A"][i]*y + c["obstacles"]["yi"][i] + c["obstacles"]["uy"][i]*tc;
+          x += c["obstacle"]["xi"][i] + c["obstacle"]["ux"][i]*tc;
+          y = c["obstacle"]["B"][i]/c["obstacle"]["A"][i]*y + c["obstacle"]["yi"][i] + c["obstacle"]["uy"][i]*tc;
           pts = collect(zip(x, y))
           if i==1
-            scatter!((c["obstacles"]["xi"][i],c["obstacles"]["yi"][i]),marker=_pretty_defaults[:obstacle_marker],label="Obstacles")
+            scatter!((c["obstacle"]["xi"][i],c["obstacle"]["yi"][i]),marker=_pretty_defaults[:obstacle_marker],label="Obstacles")
           end
           plot!(pts,line=_pretty_defaults[:obstacle_line],fill=_pretty_defaults[:obstacle_fill],leg=true,label="") #line=(3.0,0.0,:solid,:red)
         #  plot!(pts,line=(4.0,0.0,:solid,:red),fill=(0, 1, :red),leg=true,label="")
@@ -99,14 +99,14 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
       end
     end
 
-    if typeof(c["obstacles"]["A"][1])==Float64
-      for i in 1:length(c["obstacles"]["A"])
+    if typeof(c["obstacle"]["A"][1])==Float64
+      for i in 1:length(c["obstacle"]["A"])
         # create an ellipse
-        pts = Plots.partialcircle(0,2π,100,c["obstacles"]["A"][i])
+        pts = Plots.partialcircle(0,2π,100,c["obstacle"]["A"][i])
         x, y = Plots.unzip(pts)
         if _pretty_defaults[:plant]
-          x += c["obstacles"]["xi"][i] + c["obstacles"]["ux"][i]*r.dfs_plant[idx][:t][end];
-          y = c["obstacles"]["B"][i]/c["obstacles"]["A"][i]*y + c["obstacles"]["yi"][i] + c["obstacles"]["uy"][i]*r.dfs_plant[idx][:t][end];
+          x += c["obstacle"]["xi"][i] + c["obstacle"]["ux"][i]*r.dfs_plant[idx][:t][end];
+          y = c["obstacle"]["B"][i]/c["obstacle"]["A"][i]*y + c["obstacle"]["yi"][i] + c["obstacle"]["uy"][i]*r.dfs_plant[idx][:t][end];
         else
           if r.dfs[idx]!=nothing
             tc=r.dfs[idx][:t][end];
@@ -114,12 +114,12 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
             tc=0;
             if idx!=1; warn("\n Obstacles set to inital condition for current frame. \n") end
           end
-          x += c["obstacles"]["xi"][i] + c["obstacles"]["ux"][i]*tc;
-          y = c["obstacles"]["B"][i]/c["obstacles"]["A"][i]*y + c["obstacles"]["yi"][i] + c["obstacles"]["uy"][i]*tc;
+          x += c["obstacle"]["xi"][i] + c["obstacle"]["ux"][i]*tc;
+          y = c["obstacle"]["B"][i]/c["obstacle"]["A"][i]*y + c["obstacle"]["yi"][i] + c["obstacle"]["uy"][i]*tc;
         end
         pts=collect(zip(x, y))
-        X=c["obstacles"]["xi"][i] + c["obstacles"]["ux"][i]*r.dfs_plant[idx][:t][end];
-        Y=c["obstacles"]["yi"][i] + c["obstacles"]["uy"][i]*r.dfs_plant[idx][:t][end];
+        X=c["obstacle"]["xi"][i] + c["obstacle"]["ux"][i]*r.dfs_plant[idx][:t][end];
+        Y=c["obstacle"]["yi"][i] + c["obstacle"]["uy"][i]*r.dfs_plant[idx][:t][end];
         if posterPlot
           shade=idx/r.eval_num;
           if idx==r.eval_num && i==1
