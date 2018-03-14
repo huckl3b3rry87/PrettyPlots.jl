@@ -61,14 +61,14 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
       end
     end
 
-    if !isempty(c["obstacle"]["A"])
-      for i in 1:length(c["obstacle"]["A"])
+    if !isempty(c["obstacle"]["radius"])
+      for i in 1:length(c["obstacle"]["radius"])
           # create an ellipse
-          pts = Plots.partialcircle(0,2π,100,c["obstacle"]["A"][i])
+          pts = Plots.partialcircle(0,2π,100,c["obstacle"]["radius"][i])
           x, y = Plots.unzip(pts)
           tc=0;
           x += c["obstacle"]["xi"][i] + c["obstacle"]["ux"][i]*tc;
-          y = c["obstacle"]["B"][i]/c["obstacle"]["A"][i]*y + c["obstacle"]["yi"][i] + c["obstacle"]["uy"][i]*tc;
+          y = c["obstacle"]["radius"][i]/c["obstacle"]["radius"][i]*y + c["obstacle"]["yi"][i] + c["obstacle"]["uy"][i]*tc;
           pts = collect(zip(x, y))
           if i==1
             scatter!((c["obstacle"]["xi"][i],c["obstacle"]["yi"][i]),marker=_pretty_defaults[:obstacle_marker],label="Obstacles")
@@ -99,14 +99,14 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
       end
     end
 
-    if typeof(c["obstacle"]["A"][1])==Float64
-      for i in 1:length(c["obstacle"]["A"])
+    if typeof(c["obstacle"]["radius"][1])==Float64
+      for i in 1:length(c["obstacle"]["radius"])
         # create an ellipse
-        pts = Plots.partialcircle(0,2π,100,c["obstacle"]["A"][i])
+        pts = Plots.partialcircle(0,2π,100,c["obstacle"]["radius"][i])
         x, y = Plots.unzip(pts)
         if _pretty_defaults[:plant]
           x += c["obstacle"]["xi"][i] + c["obstacle"]["ux"][i]*r.dfs_plant[idx][:t][end];
-          y = c["obstacle"]["B"][i]/c["obstacle"]["A"][i]*y + c["obstacle"]["yi"][i] + c["obstacle"]["uy"][i]*r.dfs_plant[idx][:t][end];
+          y = c["obstacle"]["radius"][i]/c["obstacle"]["radius"][i]*y + c["obstacle"]["yi"][i] + c["obstacle"]["uy"][i]*r.dfs_plant[idx][:t][end];
         else
           if r.dfs[idx]!=nothing
             tc=r.dfs[idx][:t][end];
@@ -115,7 +115,7 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
             if idx!=1; warn("\n Obstacles set to inital condition for current frame. \n") end
           end
           x += c["obstacle"]["xi"][i] + c["obstacle"]["ux"][i]*tc;
-          y = c["obstacle"]["B"][i]/c["obstacle"]["A"][i]*y + c["obstacle"]["yi"][i] + c["obstacle"]["uy"][i]*tc;
+          y = c["obstacle"]["radius"][i]/c["obstacle"]["radius"][i]*y + c["obstacle"]["yi"][i] + c["obstacle"]["uy"][i]*tc;
         end
         pts=collect(zip(x, y))
         X=c["obstacle"]["xi"][i] + c["obstacle"]["ux"][i]*r.dfs_plant[idx][:t][end];
