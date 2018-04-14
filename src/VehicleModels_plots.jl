@@ -139,9 +139,9 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
       end
     end
 
-    xaxis!(n.state.description[1]);
-    yaxis!(n.state.description[2]);
-    if !_pretty_defaults[:simulate] savefig(string(r.results_dir,"/",n.state.name[1],"_vs_",n.state.name[2],".",_pretty_defaults[:format])); end
+    xaxis!(n.ocp.state.description[1]);
+    yaxis!(n.ocp.state.description[2]);
+    if !_pretty_defaults[:simulate] savefig(string(r.results_dir,"/",n.ocp.state.name[1],"_vs_",n.ocp.state.name[2],".",_pretty_defaults[:format])); end
   end
   return pp
 end
@@ -264,8 +264,8 @@ function vtPlot(n,pa,c,idx::Int64)
 
 	@unpack_Vpara pa
 
-  if idx > length(n.r.dfs)
-    warn("Cannot plot idx = ", idx, " because length(n.r.dfs) = ", length(n.r.dfs), ". \n
+  if idx > length(n.r.ocp.dfs)
+    warn("Cannot plot idx = ", idx, " because length(n.r.ocp.dfs) = ", length(n.r.ocp.dfs), ". \n
           Skipping idx in vtPlot().")
     vt = plot(0,leg=:false)
     return vt
@@ -343,8 +343,8 @@ function axLimsPlot(n,pa,idx::Int64,args...;kwargs...)
   end
   if !append; axp=plot(0,leg=:false); else axp=args[1]; end
 
-  if idx > length(n.r.dfs)
-    warn("Cannot plot idx = ", idx, " because length(n.r.dfs) = ", length(n.r.dfs), ". \n
+  if idx > length(n.r.ocp.dfs)
+    warn("Cannot plot idx = ", idx, " because length(n.r.ocp.dfs) = ", length(n.r.ocp.dfs), ". \n
           Skipping idx in axLimsPlot().")
     return axp
   end
@@ -498,8 +498,8 @@ function posPlot(n,c,idx;kwargs...)
   if haskey(c,"track"); pp=trackPlot(c;(:smallMarkers=>smallMarkers)); else pp=plot(0,leg=:false); end  # track
   if haskey(c["misc"],"Lr"); pp=lidarPlot(r,c,idx,pp;(:append=>true)); end  # lidar
 
-  if idx > length(n.r.dfs)
-    warn("Cannot plot idx = ", idx, " because length(n.r.dfs) = ", length(n.r.dfs), ". \n
+  if idx > length(n.r.ocp.dfs)
+    warn("Cannot plot idx = ", idx, " because length(n.r.ocp.dfs) = ", length(n.r.ocp.dfs), ". \n
           Skipping idx in posPlot().")
     return pp
   end
@@ -521,7 +521,7 @@ Date Create: 3/11/2017, Last Modified: 2/12/2018 \n
 """
 function mainPlot(n,c,idx;kwargs...)
   r=n.r;
-  pa=n.params[1];
+  pa=n.ocp.params[1];
 
   kw = Dict(kwargs);
   if !haskey(kw,:mode);error("select a mode for the simulation \n")
@@ -590,21 +590,21 @@ kwargs=(:mode=>:open1)
   else; mode=get(kw,:mode,0);
   end
 
-  if n.r.eval_num>2;
-    if typeof(n.r.dfs[end]) == nothing || typeof(n.r.dfs[end]) == Void
-      pop!(n.r.dfs)
+  if n.r.ocp.evalNum>2;
+    if typeof(n.r.ocp.dfs[end]) == nothing || typeof(n.r.ocp.dfs[end]) == Void
+      pop!(n.r.ocp.dfs)
     end # assuming there is only one nothing
-    if abs(n.r.dfs[end][:t][end]-n.r.dfs[end][:t][1]) < 0.2
+    if abs(n.r.ocp.dfs[end][:t][end]-n.r.ocp.dfs[end][:t][1]) < 0.2
       warn("\n The time scale for the final optimization is too small to plot.\n
                 Deleting the final element in the results! \n ")
-      pop!(n.r.dfs)
-      num=n.r.eval_num-1;
+      pop!(n.r.ocp.dfs)
+      num=n.r.ocp.evalNum-1;
     else
-      num=n.r.eval_num
+      num=n.r.ocp.evalNum
     end
-      if n.r.eval_num > length(n.r.dfs_plant)
-        warn("Reducing the number of frames. n.r.eval_num > length(n.r.dfs_plant) ")
-        num = length(n.r.dfs_plant)
+      if n.r.ocp.evalNum > length(n.r.ip.dfsplant)
+        warn("Reducing the number of frames. n.r.ocp.evalNum > length(n.r.ip.dfsplant) ")
+        num = length(n.r.ip.dfsplant)
       end
 
       if num > length(r.dfs)
@@ -616,10 +616,10 @@ kwargs=(:mode=>:open1)
      anim = @animate for idx in 1:num
        mainPlot(n,c,idx;(:mode=>mode))
     end
-    cd(n.r.results_dir)
-      gif(anim,"mainSim.gif",fps=Int(ceil(1/n.mpc.tex)));
+    cd(n.r.resultsDir)
+      gif(anim,"mainSim.gif",fps=Int(ceil(1/n.mpc.v.tex)));
       run(`ffmpeg -f gif -i mainSim.gif RESULT.mp4`)
-    cd(n.r.main_dir)
+    cd(n.r.mainDir)
   else
     warn("the evaluation number was not greater than 2. Cannot make animation. Plotting a static plot.")
     warn("\n Modifying current plot settings! \n")
@@ -643,7 +643,7 @@ function pSim(n,c)
   anim = @animate for ii in 1:length(r.dfs)
     posPlot(n,c,ii);
   end
-  gif(anim, string(r.results_dir,"posSim.gif"), fps=Int(ceil(1/n.mpc.tex)) );
+  gif(anim, string(r.results_dir,"posSim.gif"), fps=Int(ceil(1/n.mpc.v.tex)) );
   return nothing
 end
 
@@ -660,7 +660,7 @@ function pSimGR(n,c)
 
   ENV["GKS_WSTYPE"]="mov"
   gr(show=true)
-  for ii in 1:length(n.r.dfs)
+  for ii in 1:length(n.r.ocp.dfs)
     posPlot(n,c,ii);
   end
 end
@@ -677,16 +677,16 @@ Date Create: 4/13/2017, Last Modified: 6/22/2017 \n
 
 function posterP(n,c)
   r=n.r;
-  pa=n.params[1];
-  if n.r.status==:Infeasible
+  pa=n.ocp.params[1];
+  if n.r.ocp.status==:Infeasible
     warn("\n Current solution is infeasible! Will try to plot, but it may fail... \n")
   end
   warn("\n Modifying current plot settings! \n")
   plotSettings(;(:simulate=>false),(:plant=>true),(:plantOnly=>true));
 
   # static plots for each frame
-  idx = length(n.r.dfs)
-  idxT = length(n.r.dfs_opt[:tSolve])
+  idx = length(n.r.ocp.dfs)
+  idxT = length(n.r.ocp.dfsOpt[:tSolve])
 
   sap=statePlot(n,idx,6)
   longv=statePlot(n,idx,7)
@@ -702,11 +702,11 @@ function posterP(n,c)
     if ii==1
       st1=1;st2=2;
       # values
-  		temp = [r.dfs_plant[jj][n.state.name[st1]] for jj in 1:r.eval_num];
+  		temp = [r.dfs_plant[jj][n.ocp.state.name[st1]] for jj in 1:r.eval_num];
   		vals1=[idx for tempM in temp for idx=tempM];
 
   		# values
-  		temp = [r.dfs_plant[jj][n.state.name[st2]] for jj in 1:r.eval_num];
+  		temp = [r.dfs_plant[jj][n.ocp.state.name[st2]] for jj in 1:r.eval_num];
   		vals2=[idx for tempM in temp for idx=tempM];
 
   		pp=plot(vals1,vals2,line=_pretty_defaults[:plant_lines][1],label="Vehicle Trajectory");
