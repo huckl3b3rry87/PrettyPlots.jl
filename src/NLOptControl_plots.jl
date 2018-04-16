@@ -22,7 +22,7 @@ end
 
 
 """
-allPlots(n;idx)
+allPlots(n;idx=2)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 2/10/2017, Last Modified: 11/10/2017 \n
@@ -119,13 +119,14 @@ function statePlot(n,idx::Int64,st::Int64,args...;kwargs...)
       plot!(n.r.ocp.dfs[idx][:t],n.r.ocp.dfs[idx][n.ocp.state.name[st]],marker=_pretty_defaults[:mpc_markers],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"))
     end
 	end
-  if _pretty_defaults[:plant]
+  #  MPC leads plant by an index
+  if _pretty_defaults[:plant] && idx!=1
 		# values
-		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st]] for jj in 1:idx];
+		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st]] for jj in 1:idx-1];
 	  vals=[idx for tempM in temp for idx=tempM];
 
 		# time
-		temp = [n.r.ip.dfsplant[jj][:t] for jj in 1:idx];
+		temp = [n.r.ip.dfsplant[jj][:t] for jj in 1:idx-1];
 		time=[idx for tempM in temp for idx=tempM];
 
     plot!(time,vals,line=_pretty_defaults[:plant_lines][1],label=string(legend_string,"plant"));
@@ -188,13 +189,13 @@ function statePlot(n,idx::Int64,st1::Int64,st2::Int64,args...;kwargs...)
 		plot!(n.r.ocp.dfs[idx][n.ocp.state.name[st1]],n.r.ocp.dfs[idx][n.ocp.state.name[st2]],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"));
 	end
 
-  if _pretty_defaults[:plant]
+  if _pretty_defaults[:plant] && idx!=1
 		# values
-		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st1]] for jj in 1:idx];
+		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st1]] for jj in 1:idx-1];
 		vals1=[idx for tempM in temp for idx=tempM];
 
 		# values
-		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st2]] for jj in 1:idx];
+		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st2]] for jj in 1:idx-1];
 		vals2=[idx for tempM in temp for idx=tempM];
 
 		plot!(vals1,vals2,line=_pretty_defaults[:plant_lines][1],label=string(legend_string,"plant"));
@@ -269,14 +270,14 @@ function controlPlot(n,idx::Int64,ctr::Int64,args...;kwargs...)
     end
   end
 
-  if _pretty_defaults[:plant]
+  if _pretty_defaults[:plant] && idx!=1
 		# values
-		temp = [n.r.ip.dfsplant[jj][n.ocp.control.name[ctr]] for jj in 1:idx];
-	  vals=[idx for tempM in temp for idx=tempM];
+		temp = [n.r.ip.dfsplant[jj][n.ocp.control.name[ctr]] for jj in 1:idx-1]
+	  vals = [idx for tempM in temp for idx=tempM];
 
 		# time
-		temp = [n.r.ip.dfsplant[jj][:t] for jj in 1:idx];
-		time=[idx for tempM in temp for idx=tempM];
+		temp = [n.r.ip.dfsplant[jj][:t] for jj in 1:idx-1]
+		time = [idx for tempM in temp for idx=tempM]
 
 		plot!(time,vals,line=_pretty_defaults[:plant_lines][1],label=string(legend_string,"plant"));
   end
