@@ -122,11 +122,11 @@ function statePlot(n,idx::Int64,st::Int64,args...;kwargs...)
   #  MPC leads plant by an index
   if _pretty_defaults[:plant] && idx!=1
 		# values
-		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st]] for jj in 1:idx-1];
+		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st]] for jj in 1:idx];
 	  vals=[idx for tempM in temp for idx=tempM];
 
 		# time
-		temp = [n.r.ip.dfsplant[jj][:t] for jj in 1:idx-1];
+		temp = [n.r.ip.dfsplant[jj][:t] for jj in 1:idx];
 		time=[idx for tempM in temp for idx=tempM];
 
     plot!(time,vals,line=_pretty_defaults[:plant_lines][1],label=string(legend_string,"plant"));
@@ -196,11 +196,11 @@ function statePlot(n,idx::Int64,st1::Int64,st2::Int64,args...;kwargs...)
 
   if _pretty_defaults[:plant] && idx!=1
 		# values
-		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st1]] for jj in 1:idx-1]
+		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st1]] for jj in 1:idx]
 		vals1 = [idx for tempM in temp for idx=tempM]
 
 		# values
-		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st2]] for jj in 1:idx-1]
+		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st2]] for jj in 1:idx]
 		vals2 = [idx for tempM in temp for idx=tempM]
 
 		plot!(vals1,vals2,line=_pretty_defaults[:plant_lines][1],label=string(legend_string,"plant"));
@@ -278,11 +278,11 @@ function controlPlot(n,idx::Int64,ctr::Int64,args...;kwargs...)
 
   if _pretty_defaults[:plant] && idx!=1
 		# values
-		temp = [n.r.ip.dfsplant[jj][n.ocp.control.name[ctr]] for jj in 1:idx-1]
+		temp = [n.r.ip.dfsplant[jj][n.ocp.control.name[ctr]] for jj in 1:idx]
 	  vals = [idx for tempM in temp for idx=tempM];
 
 		# time
-		temp = [n.r.ip.dfsplant[jj][:t] for jj in 1:idx-1]
+		temp = [n.r.ip.dfsplant[jj][:t] for jj in 1:idx]
 		time = [idx for tempM in temp for idx=tempM]
 
 		plot!(time,vals,line=_pretty_defaults[:plant_lines][1],label=string(legend_string,"plant"));
