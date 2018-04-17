@@ -131,6 +131,11 @@ function statePlot(n,idx::Int64,st::Int64,args...;kwargs...)
 
     plot!(time,vals,line=_pretty_defaults[:plant_lines][1],label=string(legend_string,"plant"));
   end
+  if _pretty_defaults[:X0p]
+    X0 = n.r.ip.X0p[idx][1]
+    t = n.r.ip.X0p[idx][2]
+    scatter!((t,X0[st]),marker=_pretty_defaults[:X0p_marker],label="X0p")
+  end
   adjust_axis(xlims(),ylims());
 	xlims!(t_vec[1],t_vec[end]);
   plot!(size=_pretty_defaults[:size]);
@@ -191,19 +196,20 @@ function statePlot(n,idx::Int64,st1::Int64,st2::Int64,args...;kwargs...)
 
   if _pretty_defaults[:plant] && idx!=1
 		# values
-		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st1]] for jj in 1:idx-1];
-		vals1=[idx for tempM in temp for idx=tempM];
+		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st1]] for jj in 1:idx-1]
+		vals1 = [idx for tempM in temp for idx=tempM]
 
 		# values
-		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st2]] for jj in 1:idx-1];
-		vals2=[idx for tempM in temp for idx=tempM];
+		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st2]] for jj in 1:idx-1]
+		vals2 = [idx for tempM in temp for idx=tempM]
 
 		plot!(vals1,vals2,line=_pretty_defaults[:plant_lines][1],label=string(legend_string,"plant"));
   end
-  adjust_axis(xlims(),ylims());
-  plot!(size=_pretty_defaults[:size]);
-  xaxis!(n.ocp.state.description[st1]);
-  yaxis!(n.ocp.state.description[st2]);
+
+  adjust_axis(xlims(),ylims())
+  plot!(size=_pretty_defaults[:size])
+  xaxis!(n.ocp.state.description[st1])
+  yaxis!(n.ocp.state.description[st2])
   if !_pretty_defaults[:simulate] savefig(string(n.r.resultsDir,n.ocp.state.name[st1],"_vs_",n.ocp.state.name[st2],".",_pretty_defaults[:format])); end
   return stp
 end

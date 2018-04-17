@@ -1,13 +1,14 @@
 #lc=distinguishable_colors(10);
 const _pretty_defaults = Dict(
-    :size         =>(700,700), # size of figure
+    :size         =>(700,700),   # size of figure
     :format       =>"png",       # format for output plots
     :plant        =>false,       # bool for simulation of plant as well as MPC
+    :X0p          =>false,       # bool for simulation of X0p
+    :X0p_marker  =>(:circle,:red,5.0,1.0),
     :plantOnly    =>false,       # bool for plotting only the plant response
-    :polyPts      =>true,       # bool for plotting the individual polynomials
+    :polyPts      =>true,        # bool for plotting the individual polynomials
     :simulate     =>false,       # bool for simulation
     :L            =>100,         # format for output plots
-
     :mpc_lines    =>[(2.7,:blue,:solid),(2.7,:red,:solid),(2.7,:darkgreen,:solid),
                      (2.7,:yellow,:solid),(2.7,:black,:solid),(2.7,:firebrick,:solid),
                      (2.7,:gold,:solid),(2.7,:greenyellow,:solid),(2.7,:hotpink,:solid),
