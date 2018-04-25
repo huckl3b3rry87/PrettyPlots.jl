@@ -30,17 +30,17 @@ Date Create: 2/10/2017, Last Modified: 11/10/2017 \n
 """
 function allPlots(n;idx::Int64=1,kwargs...)
   if !isdir(n.r.resultsDir); resultsDir!(n); end
-  stp = [statePlot(n,idx,st;kwargs...) for st in 1:n.ocp.state.num];
-  ctp = [controlPlot(n,idx,ctr;kwargs...) for ctr in 1:n.ocp.control.num];
+  stp = [statePlot(n,idx,st;kwargs...) for st in 1:n.ocp.state.num]
+  ctp = [controlPlot(n,idx,ctr;kwargs...) for ctr in 1:n.ocp.control.num]
 
   if n.s.ocp.evalCostates && n.s.ocp.integrationMethod == :ps && n.s.ocp.evalConstraints
-    csp = [costatePlot(n,idx,st;kwargs...) for st in 1:n.ocp.state.num];
-    all = [stp;ctp;csp];
+    csp = [costatePlot(n,idx,st;kwargs...) for st in 1:n.ocp.state.num]
+    all = [stp;ctp;csp]
   else
-    all = [stp;ctp];
+    all = [stp;ctp]
   end
 
-  h = plot(all...,size=_pretty_defaults[:size]);
+  h = plot(all...,size=_pretty_defaults[:size])
   if !_pretty_defaults[:simulate]; savefig(string(n.r.resultsDir,"main.",_pretty_defaults[:format])) end
   return h
 end
@@ -111,10 +111,10 @@ function statePlot(n,idx::Int64,st::Int64,args...;kwargs...)
           if int_color > length(_pretty_defaults[:mpc_lines]) # reset colors
             int_color = 1
           end
-          plot!(n.r.ocp.tpolyPts[int],n.r.ocp.XpolyPts[st][int],line=_pretty_defaults[:mpc_lines][int_color], label=string("poly. # ", int))
+          plot!(n.r.ocp.AlltpolyPts[idx][int],n.r.ocp.AllXpolyPts[idx][st][int],line=_pretty_defaults[:mpc_lines][int_color], label=string("poly. # ", int))
           int_color = int_color + 1
       end
-      scatter!(n.r.ocp.dfs[idx][:t],n.r.ocp.dfs[idx][n.ocp.state.name[st]],marker=_pretty_defaults[:mpc_markers],label=string(legend_string,"colloc. pts."))
+      scatter!((n.r.ocp.dfs[idx][:t],n.r.ocp.dfs[idx][n.ocp.state.name[st]]),marker=_pretty_defaults[:mpc_markers],label=string(legend_string,"colloc. pts."))
     else
       plot!(n.r.ocp.dfs[idx][:t],n.r.ocp.dfs[idx][n.ocp.state.name[st]],marker=_pretty_defaults[:mpc_markers],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"))
     end
@@ -266,8 +266,8 @@ function controlPlot(n,idx::Int64,ctr::Int64,args...;kwargs...)
       for int in 1:n.ocp.Ni
         if int_color > length(_pretty_defaults[:mpc_lines]) # reset colors
           int_color = 1  # reset colors
-        end  # TODO shift t_polyPts to t0, currently starting at 0
-        plot!(n.r.ocp.tpolyPts[int],n.r.ocp.UpolyPts[ctr][int],line=_pretty_defaults[:mpc_lines][int_color], label=string("poly. # ", int))
+        end
+        plot!(n.r.ocp.AlltpolyPts[idx][int],n.r.ocp.AllUpolyPts[idx][ctr][int],line=_pretty_defaults[:mpc_lines][int_color], label=string("poly. # ", int))
         int_color = int_color + 1
       end
       scatter!(n.r.ocp.dfs[idx][:t],n.r.ocp.dfs[idx][n.ocp.control.name[ctr]],marker=_pretty_defaults[:mpc_markers],label=string(legend_string,"colloc. pts."))
@@ -425,7 +425,7 @@ function costatePlot(n,idx::Int64,st::Int64;kwargs...)
         if int_color > length(_pretty_defaults[:mpc_lines]) # reset colors
           int_color = 1
         end
-        plot!(n.r.ocp.tpolyPts[int],n.r.ocp.CSpolyPts[st][int],line=_pretty_defaults[:mpc_lines][int_color], label=string("poly. # ", int))
+        plot!(n.r.ocp.AlltpolyPts[idx][int],n.r.ocp.AllCSpolyPts[idx][st][int],line=_pretty_defaults[:mpc_lines][int_color], label=string("poly. # ", int))
         int_color = int_color + 1
         scatter!(t_st_int[int][1:end-1],n.r.CS[st][int],marker=_pretty_defaults[:mpc_markers],label=string(legend_string,"costate pts."))
     end
