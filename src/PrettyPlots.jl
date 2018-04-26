@@ -13,6 +13,7 @@ using NLOptControl  # need for resultsDir!()
 
 include("PrettyUtils.jl")
 include("NLOptControl_plots.jl")
+include("MPCPlots.jl")
 include("VehicleModels_plots.jl")
 
 export
@@ -30,6 +31,9 @@ export
     costatesPlots,
     allPlots,
     adjust_axis,
+
+    # MPC plots
+    mpcPlot,
     tPlot,
     optPlot,
 
@@ -40,6 +44,7 @@ export
     posterP,
     posPlot,
     vtPlot,
+
 
     # Plots.jl exported functions
     xlims!,

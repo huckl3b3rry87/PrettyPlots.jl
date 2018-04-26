@@ -105,7 +105,7 @@ function statePlot(n,idx::Int64,st::Int64,args...;kwargs...)
 
   # plot the values TODO if there are no lims then you cannot really see the signal
 	if n.r.ocp.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
-    if n.s.ocp.integrationMethod == :ps && _pretty_defaults[:polyPts]
+    if n.s.ocp.integrationMethod == :ps && _pretty_defaults[:polyPts] && isequal(n.r.ocp.dfsOpt[:status][idx],:Optimal) && !n.s.ocp.linearInterpolation && n.s.ocp.interpolationOn
       int_color = 1
       for int in 1:n.ocp.Ni
           if int_color > length(_pretty_defaults[:mpc_lines]) # reset colors
@@ -120,7 +120,7 @@ function statePlot(n,idx::Int64,st::Int64,args...;kwargs...)
     end
 	end
   #  MPC leads plant by an index
-  if _pretty_defaults[:plant] && idx!=1
+  if _pretty_defaults[:plant] #&& idx!=1
 		# values
 		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st]] for jj in 1:idx];
 	  vals=[idx for tempM in temp for idx=tempM];
@@ -194,7 +194,7 @@ function statePlot(n,idx::Int64,st1::Int64,st2::Int64,args...;kwargs...)
 		plot!(n.r.ocp.dfs[idx][n.ocp.state.name[st1]],n.r.ocp.dfs[idx][n.ocp.state.name[st2]],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"));
 	end
 
-  if _pretty_defaults[:plant] && idx!=1
+  if _pretty_defaults[:plant] #&& idx!=1
 		# values
 		temp = [n.r.ip.dfsplant[jj][n.ocp.state.name[st1]] for jj in 1:idx]
 		vals1 = [idx for tempM in temp for idx=tempM]
@@ -245,13 +245,13 @@ function controlPlot(n,idx::Int64,ctr::Int64,args...;kwargs...)
 
   # check to see if user would like to label legend
   if !haskey(kw,:legend); kw_ = Dict(:legend => ""); legend_string = get(kw_,:legend,0);
-  else; legend_string = get(kw,:legend,0);
+  else; legend_string = get(kw,:legend,0)
   end
 
   if n.r.ocp.dfs[idx]!=nothing
-  	t_vec=linspace(0.0,n.r.ocp.dfs[end][:t][end],_pretty_defaults[:L]);
+  	t_vec = linspace(0.0,n.r.ocp.dfs[end][:t][end],_pretty_defaults[:L])
 	else
-		t_vec=linspace(0.0,n.r.ip.dfsplant[end][:t][end],_pretty_defaults[:L]);
+		t_vec = linspace(0.0,n.r.ip.dfsplant[end][:t][end],_pretty_defaults[:L])
 	end
 
   # plot the limits
@@ -261,7 +261,7 @@ function controlPlot(n,idx::Int64,ctr::Int64,args...;kwargs...)
   end
 
   if n.r.ocp.dfs[idx]!=nothing  && !_pretty_defaults[:plantOnly]
-    if n.s.ocp.integrationMethod == :ps && _pretty_defaults[:polyPts]
+    if n.s.ocp.integrationMethod == :ps && _pretty_defaults[:polyPts] && isequal(n.r.ocp.dfsOpt[:status][idx],:Optimal) && !n.s.ocp.linearInterpolation && n.s.ocp.interpolationOn
       int_color = 1
       for int in 1:n.ocp.Ni
         if int_color > length(_pretty_defaults[:mpc_lines]) # reset colors
@@ -276,7 +276,7 @@ function controlPlot(n,idx::Int64,ctr::Int64,args...;kwargs...)
     end
   end
 
-  if _pretty_defaults[:plant] && idx!=1
+  if _pretty_defaults[:plant] #&& idx!=1
 		# values
 		temp = [n.r.ip.dfsplant[jj][n.ocp.control.name[ctr]] for jj in 1:idx]
 	  vals = [idx for tempM in temp for idx=tempM];
@@ -295,72 +295,6 @@ function controlPlot(n,idx::Int64,ctr::Int64,args...;kwargs...)
   return ctrp
 end
 
-"""
-tp=tPlot(n,r,idx)
-tp=tPlot(n,r,idx,tp;(:append=>true))
-# plot the optimization times
-# this is an MPC plot
---------------------------------------------------------------------------------------\n
-Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 3/11/2017, Last Modified: 6/28/2017 \n
---------------------------------------------------------------------------------------\n
-"""
-function tPlot(n,idx::Int64,args...;kwargs...);
-  r=n.r;
-
-  kw = Dict(kwargs);
-  # check to see if user would like to add to an existing plot
-  if !haskey(kw,:append); append=false;
-  else; append = get(kw,:append,0);
-  end
-  if !append; tp=plot(0,leg=:false); else tp=args[1]; end
-
-  if idx > length(r.dfs_opt[:tSolve])
-      warn("Cannot plot idx = ", idx, " because length(r.dfs_opt[:tSolve]) = ", length(r.dfs_opt[:tSolve]), ". \n
-            Skipping idx in tPlot!().")
-      return tp
-  end
-
-  # check to see if user would like to label legend
-  if !haskey(kw,:legend);legend_string="";
-  else; legend_string = get(kw,:legend,0);
-  end
-
-  # to avoid a bunch of jumping around in the simulation
-	idx_max=length(r.dfs_opt[:tSolve]);
-	if (idx_max<10); idx_max=10 end
-
-  scatter!(1:idx,r.dfs_opt[:tSolve][1:idx],marker=_pretty_defaults[:opt_marker],label=string(legend_string,"optimization times"))
-	plot!(1:length(r.dfs_opt[:tSolve]),n.mpc.v.tex*ones(length(r.dfs_opt[:tSolve])),line=_pretty_defaults[:limit_lines][2],leg=:true,label="real-time threshhold",leg=:topright)
-
-	ylims!(0,max(n.mpc.v.tex*1.2, maximum(r.dfs_opt[:tSolve])))
-  xlims!(1,length(r.dfs_opt[:tSolve]))
-	yaxis!("Optimization Time (s)")
-	xaxis!("Evaluation Number")
-  plot!(size=_pretty_defaults[:size]);
-	if !_pretty_defaults[:simulate] savefig(string(n.r.resultsDir,"tplot.",_pretty_defaults[:format])) end
-
-	return tp
-end
-
-"""
---------------------------------------------------------\n
-Author: Huckleberry Febbo, Graduate Student, University of Michigan
-Date Create: 7/04/2017, Last Modified: 7/04/2017 \n
---------------------------------------------------------------------------------------\n
-"""
-function optPlot(n)
-  L=length(n.r.ocp.dfsOpt[:tSolve])
-  temp = [n.r.ocp.dfsOpt[:objVal][jj] for jj in 1:L];
-  val=[idx for tempM in temp for idx=tempM];
-
-  opt=plot(1:L,val)
-
-  yaxis!("Objective Function Values")
-	xaxis!("Evaluation Number")
-  savefig(string(n.r.resultsDir,"optPlot.",_pretty_defaults[:format]))
-  return opt
-end
 
 
 
