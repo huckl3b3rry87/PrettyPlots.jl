@@ -48,8 +48,8 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
     pp=plot(0,leg=:false)
 
     if typeof(c["goal"]["x"])==Float64  # TODO remove redundant code
-      if isnan(n.XF_tol[1]); rg=1; else rg=n.XF_tol[1]; end
-      if !posterPlot || idx ==r.eval_num
+      if isnan(n.ocp.XF_tol[1]); rg=1; else rg=n.ocp.XF_tol[1]; end
+      if !posterPlot || idx ==r.ocp.evalNum
         pts = Plots.partialcircle(0,2π,100,rg);
         x, y = Plots.unzip(pts);
         x += c["goal"]["x"];  y += c["g"]["y"];
@@ -86,8 +86,8 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
 
     # plot the goal; assuming same in x and y
     if typeof(c["goal"]["x"])==Float64 # TODO remove redundant code
-      if isnan(n.XF_tol[1]); rg=1; else rg=n.XF_tol[1]; end
-      if !posterPlot || idx ==r.eval_num
+      if isnan(n.ocp.XF_tol[1]); rg=1; else rg=n.ocp.XF_tol[1]; end
+      if !posterPlot || idx ==r.ocp.evalNum
         pts = Plots.partialcircle(0,2π,100,rg);
         x, y = Plots.unzip(pts);
         x += c["goal"]["x"];  y += c["goal"]["yVal"];
@@ -105,11 +105,11 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
         pts = Plots.partialcircle(0,2π,100,c["obstacle"]["radius"][i])
         x, y = Plots.unzip(pts)
         if _pretty_defaults[:plant]
-          x += c["obstacle"]["x0"][i] + c["obstacle"]["vx"][i]*r.dfs_plant[idx][:t][end];
-          y = c["obstacle"]["radius"][i]/c["obstacle"]["radius"][i]*y + c["obstacle"]["y0"][i] + c["obstacle"]["vy"][i]*r.dfs_plant[idx][:t][end];
+          x += c["obstacle"]["x0"][i] + c["obstacle"]["vx"][i]*r.ip.dfsplant[idx][:t][end];
+          y = c["obstacle"]["radius"][i]/c["obstacle"]["radius"][i]*y + c["obstacle"]["y0"][i] + c["obstacle"]["vy"][i]*r.ip.dfsplant[idx][:t][end];
         else
-          if r.dfs[idx]!=nothing
-            tc=r.dfs[idx][:t][end];
+          if r.ocp.dfs[idx]!=nothing
+            tc=r.ocp.dfs[idx][:t][end];
           else
             tc=0;
             if idx!=1; warn("\n Obstacles set to inital condition for current frame. \n") end
@@ -118,11 +118,11 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
           y = c["obstacle"]["radius"][i]/c["obstacle"]["radius"][i]*y + c["obstacle"]["y0"][i] + c["obstacle"]["vy"][i]*tc;
         end
         pts=collect(zip(x, y))
-        X=c["obstacle"]["x0"][i] + c["obstacle"]["vx"][i]*r.dfs_plant[idx][:t][end];
-        Y=c["obstacle"]["y0"][i] + c["obstacle"]["vy"][i]*r.dfs_plant[idx][:t][end];
+        X=c["obstacle"]["x0"][i] + c["obstacle"]["vx"][i]*r.ip.dfsplant[idx][:t][end];
+        Y=c["obstacle"]["y0"][i] + c["obstacle"]["vy"][i]*r.ip.dfsplant[idx][:t][end];
         if posterPlot
-          shade=idx/r.eval_num;
-          if idx==r.eval_num && i==1
+          shade=idx/r.ocp.evalNum;
+          if idx==r.ocp.evalNum && i==1
             scatter!((X,Y),marker=_pretty_defaults[:obstacle_marker],label="Obstacles")
           end
           plot!(pts,line=_pretty_defaults[:obstacle_line],fill=(0,shade,:red),leg=true,label="")
@@ -141,7 +141,7 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
 
     xaxis!(n.ocp.state.description[1]);
     yaxis!(n.ocp.state.description[2]);
-    if !_pretty_defaults[:simulate] savefig(string(r.results_dir,"/",n.ocp.state.name[1],"_vs_",n.ocp.state.name[2],".",_pretty_defaults[:format])); end
+    if !_pretty_defaults[:simulate] savefig(string(r.resultsDir,"/",n.ocp.state.name[1],"_vs_",n.ocp.state.name[2],".",_pretty_defaults[:format])); end
   end
   return pp
 end
@@ -164,9 +164,9 @@ Date Create: 3/11/2017, Last Modified: 4/4/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function vehiclePlot(n,c,idx,args...;kwargs...)
-  r=n.r;
+  r = n.r
 
-  kw = Dict(kwargs);
+  kw = Dict(kwargs)
 
   # check to see if user wants to zoom
   if !haskey(kw,:zoom); zoom = false;
@@ -200,22 +200,22 @@ function vehiclePlot(n,c,idx,args...;kwargs...)
 
   # plot the vehicle
   if _pretty_defaults[:plant]
-    X_v = r.dfs_plant[idx][:x][end]  # using the end of the simulated data from the vehicle model
-    Y_v = r.dfs_plant[idx][:y][end]
-    PSI_v = r.dfs_plant[idx][:psi][end]-pi/2
+    X_v = r.ip.dfsplant[idx][:x][end]  # using the end of the simulated data from the vehicle model
+    Y_v = r.ip.dfsplant[idx][:y][end]
+    PSI_v = r.ip.dfsplant[idx][:psi][end]-pi/2
   else
    #TODO condider eliminating option to plot mpc only
-    X_v = r.dfs[idx][:x][1] # start at begining
-    Y_v = r.dfs[idx][:y][1]
-    PSI_v = r.dfs[idx][:psi][1]-pi/2
+    X_v = r.ocp.dfs[idx][:x][1] # start at begining
+    Y_v = r.ocp.dfs[idx][:y][1]
+    PSI_v = r.ocp.dfs[idx][:psi][1]-pi/2
   end
 
-  P = [XQ;YQ];
-  ct = cos(PSI_v);
-  st = sin(PSI_v);
-  R = [ct -st;st ct];
-  P2 = R * P;
-  if !posterPlot || idx==r.eval_num
+  P = [XQ;YQ]
+  ct = cos(PSI_v)
+  st = sin(PSI_v)
+  R = [ct -st;st ct]
+  P2 = R*P
+  if !posterPlot || idx==r.ocp.evalNum
     if !smallMarkers # for legend
       scatter!((X_v,Y_v),marker=_pretty_defaults[:vehicle_marker], grid=true,label="Vehicle")
     end
@@ -224,13 +224,13 @@ function vehiclePlot(n,c,idx,args...;kwargs...)
 
   if !zoom && !setLims
     if _pretty_defaults[:plant]  # TODO push this to a higher level
-      xL=minDF(r.dfs_plant,:x);xU=maxDF(r.dfs_plant,:x);
-      yL=minDF(r.dfs_plant,:y);yU=maxDF(r.dfs_plant,:y);
+      xL = minDF(r.ip.dfsplant,:x);xU=maxDF(r.ip.dfsplant,:x);
+      yL = minDF(r.ip.dfsplant,:y);yU=maxDF(r.ip.dfsplant,:y);
     else
-      xL=minDF(r.dfs,:x);xU=maxDF(r.dfs,:x);
-      yL=minDF(r.dfs,:y);yU=maxDF(r.dfs,:y);
+      xL = minDF(r.ocp.dfs,:x);xU=maxDF(r.ocp.dfs,:x);
+      yL = minDF(r.ocp.dfs,:y);yU=maxDF(r.ocp.dfs,:y);
     end
-      dx=xU-xL;dy=yU-yL; # axis equal
+      dx = xU - xL;dy = yU - yL; # axis equal
       if dx>dy; yU=yL+dx; else xU=xL+dy; end
       xlims!(xL,xU);
       ylims!(yL,yU);
@@ -249,7 +249,7 @@ function vehiclePlot(n,c,idx,args...;kwargs...)
     ylims!(c["misc"]["Ylims"][1],c["misc"]["Ylims"][2]);
   end
 
-  if !_pretty_defaults[:simulate]; savefig(string(r.results_dir,"x_vs_y",".",_pretty_defaults[:format])); end
+  if !_pretty_defaults[:simulate]; savefig(string(r.resultsDir,"x_vs_y",".",_pretty_defaults[:format])); end
   return pp
 end
 """
@@ -271,46 +271,46 @@ function vtPlot(n,pa,c,idx::Int64)
     return vt
   end
 
-  if r.dfs[idx]!=nothing
-    t_vec=linspace(0.0,max(5,ceil(r.dfs[end][:t][end]/1)*1),_pretty_defaults[:L]);
+  if r.ocp.dfs[idx]!=nothing
+    t_vec=linspace(0.0,max(5,ceil(r.ocp.dfs[end][:t][end]/1)*1),_pretty_defaults[:L]);
   else
-    t_vec=linspace(0.0,max(5,ceil(r.dfs_plant[end][:t][end]/1)*1),_pretty_defaults[:L]);
+    t_vec=linspace(0.0,max(5,ceil(r.ip.dfsplant[end][:t][end]/1)*1),_pretty_defaults[:L]);
   end
 
 	vt=plot(t_vec,Fz_min*ones(_pretty_defaults[:L],1),line=_pretty_defaults[:limit_lines][2],label="min")
 
-  if r.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
-    V=r.dfs[idx][:v];R=r.dfs[idx][:r];SA=r.dfs[idx][:sa];
+  if r.ocp.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
+    V=r.ocp.dfs[idx][:v];R=r.ocp.dfs[idx][:r];SA=r.ocp.dfs[idx][:sa];
     if c["misc"]["model"]!=:ThreeDOFv1
-      Ax=r.dfs[idx][:ax]; U=r.dfs[idx][:ux];
+      Ax=r.ocp.dfs[idx][:ax]; U=r.ocp.dfs[idx][:ux];
     else # constain speed (the model is not optimizing speed)
       U=c["misc"]["ux"]*ones(length(V)); Ax=zeros(length(V));
     end
-    plot!(r.dfs[idx][:t],@FZ_RL(),line=_pretty_defaults[:mpc_lines][1],label="RL-mpc");
-    plot!(r.dfs[idx][:t],@FZ_RR(),line=_pretty_defaults[:mpc_lines][2],label="RR-mpc");
+    plot!(r.ocp.dfs[idx][:t],@FZ_RL(),line=_pretty_defaults[:mpc_lines][1],label="RL-mpc");
+    plot!(r.ocp.dfs[idx][:t],@FZ_RR(),line=_pretty_defaults[:mpc_lines][2],label="RR-mpc");
   end
   if _pretty_defaults[:plant]
-    temp = [r.dfs_plant[jj][:v] for jj in 1:idx]; # V
+    temp = [r.ip.dfsplant[jj][:v] for jj in 1:idx]; # V
     V=[idx for tempM in temp for idx=tempM];
 
     if c["misc"]["model"]!=:ThreeDOFv1
-      temp = [r.dfs_plant[jj][:ux] for jj in 1:idx]; # ux
+      temp = [r.ip.dfsplant[jj][:ux] for jj in 1:idx]; # ux
       U=[idx for tempM in temp for idx=tempM];
 
-      temp = [r.dfs_plant[jj][:ax] for jj in 1:idx]; # ax
+      temp = [r.ip.dfsplant[jj][:ax] for jj in 1:idx]; # ax
       Ax=[idx for tempM in temp for idx=tempM];
     else # constain speed ( the model is not optimizing speed)
       U=c["misc"]["ux"]*ones(length(V)); Ax=zeros(length(V));
     end
 
-    temp = [r.dfs_plant[jj][:r] for jj in 1:idx]; # r
+    temp = [r.ip.dfsplant[jj][:r] for jj in 1:idx]; # r
     R=[idx for tempM in temp for idx=tempM];
 
-    temp = [r.dfs_plant[jj][:sa] for jj in 1:idx]; # sa
+    temp = [r.ip.dfsplant[jj][:sa] for jj in 1:idx]; # sa
     SA=[idx for tempM in temp for idx=tempM];
 
     # time
-    temp = [r.dfs_plant[jj][:t] for jj in 1:idx];
+    temp = [r.ip.dfsplant[jj][:t] for jj in 1:idx];
     time=[idx for tempM in temp for idx=tempM];
 
     plot!(time,@FZ_RL(),line=_pretty_defaults[:plant_lines][1],label="RL-plant");
@@ -321,7 +321,7 @@ function vtPlot(n,pa,c,idx::Int64)
   xlims!(t_vec[1],t_vec[end]);
   ylims!(_pretty_defaults[:tire_force_lims])
 	title!("Vertical Tire Forces"); yaxis!("Force (N)"); xaxis!("time (s)")
-	if !_pretty_defaults[:simulate] savefig(string(r.results_dir,"vt.",_pretty_defaults[:format])) end
+	if !_pretty_defaults[:simulate] savefig(string(r.resultsDir,"vt.",_pretty_defaults[:format])) end
   return vt
 end
 
@@ -351,23 +351,23 @@ function axLimsPlot(n,pa,idx::Int64,args...;kwargs...)
 
   @unpack_Vpara pa
 
-  if !_pretty_defaults[:plant] && r.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
-    t_vec=linspace(0.0,max(5,ceil(r.dfs[end][:t][end]/1)*1),_pretty_defaults[:L]);
+  if !_pretty_defaults[:plant] && r.ocp.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
+    t_vec=linspace(0.0,max(5,ceil(r.ocp.dfs[end][:t][end]/1)*1),_pretty_defaults[:L]);
   else
-    t_vec=linspace(0,max(5,ceil(r.dfs_plant[end][:t][end]/1)*1),_pretty_defaults[:L]);
+    t_vec=linspace(0,max(5,ceil(r.ip.dfsplant[end][:t][end]/1)*1),_pretty_defaults[:L]);
   end
 
-  if r.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
-    U = r.dfs[idx][:ux]
-    plot!(r.dfs[idx][:t],@Ax_max(),line=_pretty_defaults[:limit_lines][2],label="max-mpc");
-    plot!(r.dfs[idx][:t],@Ax_min(),line=_pretty_defaults[:limit_lines][1],label="min-mpc");
+  if r.ocp.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
+    U = r.ocp.dfs[idx][:ux]
+    plot!(r.ocp.dfs[idx][:t],@Ax_max(),line=_pretty_defaults[:limit_lines][2],label="max-mpc");
+    plot!(r.ocp.dfs[idx][:t],@Ax_min(),line=_pretty_defaults[:limit_lines][1],label="min-mpc");
   end
   if _pretty_defaults[:plant]
-    temp = [r.dfs_plant[jj][:ux] for jj in 1:idx]; # ux
+    temp = [r.ip.dfsplant[jj][:ux] for jj in 1:idx]; # ux
     U=[idx for tempM in temp for idx=tempM];
 
     # time
-    temp = [r.dfs_plant[jj][:t] for jj in 1:idx];
+    temp = [r.ip.dfsplant[jj][:t] for jj in 1:idx];
     time=[idx for tempM in temp for idx=tempM];
 
     plot!(time,@Ax_max(),line=_pretty_defaults[:limit_lines][4],label="max-plant");
@@ -375,7 +375,7 @@ function axLimsPlot(n,pa,idx::Int64,args...;kwargs...)
   end
   ylims!(_pretty_defaults[:ax_lims]);
   plot!(size=_pretty_defaults[:size]);
-  if !_pretty_defaults[:simulate] savefig(string(r.results_dir,"axp.",_pretty_defaults[:format])) end
+  if !_pretty_defaults[:simulate] savefig(string(r.resultsDir,"axp.",_pretty_defaults[:format])) end
   return axp
 end
 
@@ -440,21 +440,21 @@ function lidarPlot(r,c,idx,args...;kwargs...)
   end
   if !append; pp=plot(0,leg=:false); else pp=args[1]; end
 
-  if idx > length(r.dfs)
-    warn("Cannot plot idx = ", idx, " because length(r.dfs) = ", length(r.dfs), ". \n
+  if idx > length(r.ocp.dfs)
+    warn("Cannot plot idx = ", idx, " because length(r.ocp.dfs) = ", length(r.ocp.dfs), ". \n
           Skipping idx in lidarPlot().")
     return pp
   end
 
   # plot the LiDAR
   if _pretty_defaults[:plant]
-    X_v = r.dfs_plant[idx][:x][1]  # using the begining of the simulated data from the vehicle model
-    Y_v = r.dfs_plant[idx][:y][1]
-    PSI_v = r.dfs_plant[idx][:psi][1]-pi/2
+    X_v = r.ip.dfsplant[idx][:x][1]  # using the begining of the simulated data from the vehicle model
+    Y_v = r.ip.dfsplant[idx][:y][1]
+    PSI_v = r.ip.dfsplant[idx][:psi][1]-pi/2
   else
-    X_v = r.dfs[idx][:x][1]
-    Y_v = r.dfs[idx][:y][1]
-    PSI_v = r.dfs[idx][:psi][1]-pi/2
+    X_v = r.ocp.dfs[idx][:x][1]
+    Y_v = r.ocp.dfs[idx][:y][1]
+    PSI_v = r.ocp.dfs[idx][:psi][1]-pi/2
   end
 
   pts = Plots.partialcircle(PSI_v-pi,PSI_v+pi,50,c["misc"]["Lr"]);
@@ -508,7 +508,7 @@ function posPlot(n,c,idx;kwargs...)
   pp=obstaclePlot(n,c,idx,pp;(:append=>true),(:smallMarkers=>smallMarkers),(:obstacleMiss=>obstacleMiss));               # obstacles
   pp=vehiclePlot(n,c,idx,pp;(:append=>true),(:zoom=>zoom),(:setLims=>setLims),(:smallMarkers=>smallMarkers));  # vehicle
 
-  if !_pretty_defaults[:simulate] savefig(string(r.results_dir,"pp.",_pretty_defaults[:format])) end
+  if !_pretty_defaults[:simulate] savefig(string(r.resultsDir,"pp.",_pretty_defaults[:format])) end
   return pp
 end
 
@@ -583,14 +583,14 @@ Date Create: 4/13/2017, Last Modified: 7/6/2017 \n
 """
 
 function mainSim(n,c;kwargs...)
-  r=n.r;
-kwargs=(:mode=>:open1)
+  r = n.r
+  kwargs=(:mode=>:open1)
   kw = Dict(kwargs);
   if !haskey(kw,:mode);error("select a mode for the simulation \n")
   else; mode=get(kw,:mode,0);
   end
 
-  if n.r.ocp.evalNum>2;
+  if n.r.ocp.evalNum>2
     if typeof(n.r.ocp.dfs[end]) == nothing || typeof(n.r.ocp.dfs[end]) == Void
       pop!(n.r.ocp.dfs)
     end # assuming there is only one nothing
@@ -598,19 +598,19 @@ kwargs=(:mode=>:open1)
       warn("\n The time scale for the final optimization is too small to plot.\n
                 Deleting the final element in the results! \n ")
       pop!(n.r.ocp.dfs)
-      num=n.r.ocp.evalNum-1;
+      num = n.r.ocp.evalNum - 1
     else
-      num=n.r.ocp.evalNum
+      num = n.r.ocp.evalNum
     end
       if n.r.ocp.evalNum > length(n.r.ip.dfsplant)
         warn("Reducing the number of frames. n.r.ocp.evalNum > length(n.r.ip.dfsplant) ")
         num = length(n.r.ip.dfsplant)
       end
 
-      if num > length(r.dfs)
-        warn("Cannot plot idx = ", num, " because length(r.dfs) = ", length(r.dfs), "\n
+      if num > length(r.ocp.dfs)
+        warn("Cannot plot idx = ", num, " because length(r.ocp.dfs) = ", length(r.ocp.dfs), "\n
               skipping num in mainSim().")
-          num = length(r.dfs)
+          num = length(r.ocp.dfs)
       end
 
      anim = @animate for idx in 1:num
@@ -640,10 +640,10 @@ Date Create: 4/13/2017, Last Modified: 5/1/2017 \n
 function pSim(n,c)
   r=n.r;
 
-  anim = @animate for ii in 1:length(r.dfs)
+  anim = @animate for ii in 1:length(r.ocp.dfs)
     posPlot(n,c,ii);
   end
-  gif(anim, string(r.results_dir,"posSim.gif"), fps=Int(ceil(1/n.mpc.v.tex)) );
+  gif(anim, string(r.resultsDir,"posSim.gif"), fps=Int(ceil(1/n.mpc.v.tex)) );
   return nothing
 end
 
@@ -697,16 +697,16 @@ function posterP(n,c)
   vt=vtPlot(n,pa,c,idx)
 
   # dynamic plots ( maybe only update every 5 frames or so)
-  v=Vector(1:5:r.eval_num); if v[end]!=r.eval_num; append!(v,r.eval_num); end
+  v=Vector(1:5:r.ocp.evalNum); if v[end]!=r.ocp.evalNum; append!(v,r.ocp.evalNum); end
   for ii in v
     if ii==1
       st1=1;st2=2;
       # values
-  		temp = [r.dfs_plant[jj][n.ocp.state.name[st1]] for jj in 1:r.eval_num];
+  		temp = [r.ip.dfsplant[jj][n.ocp.state.name[st1]] for jj in 1:r.ocp.evalNum];
   		vals1=[idx for tempM in temp for idx=tempM];
 
   		# values
-  		temp = [r.dfs_plant[jj][n.ocp.state.name[st2]] for jj in 1:r.eval_num];
+  		temp = [r.ip.dfsplant[jj][n.ocp.state.name[st2]] for jj in 1:r.ocp.evalNum];
   		vals2=[idx for tempM in temp for idx=tempM];
 
   		pp=plot(vals1,vals2,line=_pretty_defaults[:plant_lines][1],label="Vehicle Trajectory");
@@ -721,6 +721,6 @@ function posterP(n,c)
   l = @layout [a{0.5w} [grid(2,2)
                         b{0.2h}]]
   poster=plot(pp,sap,vt,longv,axp,tp,layout=l,size=_pretty_defaults[:size]);
-  savefig(string(r.results_dir,"poster",".",_pretty_defaults[:format]));
+  savefig(string(r.resultsDir,"poster",".",_pretty_defaults[:format]));
   return nothing
 end
