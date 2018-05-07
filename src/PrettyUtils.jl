@@ -20,7 +20,7 @@ const _pretty_defaults = Dict(
     :mpc_markers  =>(:circle,:blueviolet,0.0,1.0),
     :plant_lines  =>[(4.3,:darkgreen,:solid),(4.3,:darkgreen,:dash)],
     :limit_lines  =>[(2.0,:deeppink1,:solid),(2.0,:deeppink1,:dash),(2.0,:blueviolet,:solid),(2.0,:blueviolet,:dash)],
-    :opt_marker  => [(:circle,:green,3.0),(:circle,:red,3.0)],
+    :opt_marker  => [(:circle,:green,3.0),(:rect,:red,3.0),(:circle,:black,3.0)],
 
     # for VehicleModel.jl
     :vehicle_marker  =>(:black,:rect,5.0,1.0),

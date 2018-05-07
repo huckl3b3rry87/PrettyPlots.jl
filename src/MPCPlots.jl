@@ -56,12 +56,15 @@ function tPlot(n,idx::Int64,args...;kwargs...);
 	idx_max = length(r.dfsOpt[:tSolve])
 	if (idx_max<10); idx_max=10 end
 
-  if isequal(r.dfsOpt[:status][idx],:Optimal)
-    scatter!(1:idx,r.dfsOpt[:tSolve][1:idx],marker=_pretty_defaults[:opt_marker][1],label=string(legend_string,"Optimal"))
-  else
-    scatter!(1:idx,r.dfsOpt[:tSolve][1:idx-1],marker=_pretty_defaults[:opt_marker][1],label=string(legend_string,"Previous Times"))
-    scatter!(1:idx,r.dfsOpt[:tSolve][1:idx-1],marker=_pretty_defaults[:opt_marker][2],label=string(legend_string,string(r.dfsOpt[:status][idx])) )
+  if idx > 1
+    scatter!(1:idx-1,r.dfsOpt[:tSolve][1:idx-1],marker=_pretty_defaults[:opt_marker][3],label=string(legend_string,"Previous Times"))
   end
+  if isequal(r.dfsOpt[:status][idx],:Optimal)
+    scatter!((idx,r.dfsOpt[:tSolve][idx]),marker=_pretty_defaults[:opt_marker][1],label=string(legend_string,"Optimal"))
+  else
+    scatter!((idx,r.dfsOpt[:tSolve][idx]),marker=_pretty_defaults[:opt_marker][2],label=string(legend_string,string(r.dfsOpt[:status][idx])) )
+  end
+
   plot!(1:length(r.dfsOpt[:tSolve]),n.mpc.v.tex*ones(length(r.dfsOpt[:tSolve])),line=_pretty_defaults[:limit_lines][2],leg=:true,label="real-time threshhold",leg=:topright)
 
 	ylims!(0,max(n.mpc.v.tex*1.2, maximum(r.dfsOpt[:tSolve])))

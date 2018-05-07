@@ -13,13 +13,11 @@ pp=obstaclePlot(n,c,idx,pp;(:append=>true));
 
 # posterPlot
 pp=obstaclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true)); # add obstacles
-
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 7/5/2017 \n
 --------------------------------------------------------------------------------------\n
 """
-
 function obstaclePlot(n,c,idx,args...;kwargs...)
   r=n.r;
   kw = Dict(kwargs);
@@ -260,7 +258,7 @@ Date Create: 3/11/2017, Last Modified: 3/11/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function vtPlot(n,pa,c,idx::Int64)
-  r=n.r;
+  r = n.r
 
 	@unpack_Vpara pa
 
@@ -277,7 +275,7 @@ function vtPlot(n,pa,c,idx::Int64)
     t_vec=linspace(0.0,max(5,ceil(r.ip.dfsplant[end][:t][end]/1)*1),_pretty_defaults[:L]);
   end
 
-	vt=plot(t_vec,Fz_min*ones(_pretty_defaults[:L],1),line=_pretty_defaults[:limit_lines][2],label="min")
+	vt=plot(t_vec,c["vehicle"][:Fz_off]*ones(_pretty_defaults[:L],1),line=_pretty_defaults[:limit_lines][2],label="min")
 
   if r.ocp.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
     V=r.ocp.dfs[idx][:v];R=r.ocp.dfs[idx][:r];SA=r.ocp.dfs[idx][:sa];
@@ -447,15 +445,15 @@ function lidarPlot(r,c,idx,args...;kwargs...)
   end
 
   # plot the LiDAR
-  if _pretty_defaults[:plant]
-    X_v = r.ip.dfsplant[idx][:x][1]  # using the begining of the simulated data from the vehicle model
-    Y_v = r.ip.dfsplant[idx][:y][1]
-    PSI_v = r.ip.dfsplant[idx][:psi][1]-pi/2
-  else
-    X_v = r.ocp.dfs[idx][:x][1]
-    Y_v = r.ocp.dfs[idx][:y][1]
-    PSI_v = r.ocp.dfs[idx][:psi][1]-pi/2
-  end
+  #if _pretty_defaults[:plant]
+  #  X_v = r.ip.dfsplant[idx][:x][1]  # using the begining of the simulated data from the vehicle model
+  #  Y_v = r.ip.dfsplant[idx][:y][1]
+  #  PSI_v = r.ip.dfsplant[idx][:psi][1]-pi/2
+  #else # NOTE plotting w.r.t. the OCP, that is how the constraints are set up
+  X_v = r.ocp.dfs[idx][:x][1]
+  Y_v = r.ocp.dfs[idx][:y][1]
+  PSI_v = r.ocp.dfs[idx][:psi][1]-pi/2
+  #end
 
   pts = Plots.partialcircle(PSI_v-pi,PSI_v+pi,50,c["misc"]["Lr"]);
   x, y = Plots.unzip(pts);
@@ -474,9 +472,9 @@ Date Create: 3/28/2017, Last Modified: 5/1/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function posPlot(n,c,idx;kwargs...)
-  r=n.r;
+  r = n.r
 
-  kw = Dict(kwargs);
+  kw = Dict(kwargs)
   if !haskey(kw,:zoom); zoom=false;
   else; zoom=get(kw,:zoom,0);
   end
