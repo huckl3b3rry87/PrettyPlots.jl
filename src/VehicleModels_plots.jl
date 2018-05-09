@@ -46,16 +46,26 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
     pp = plot(0,leg=:false)
 
     if typeof(c["goal"]["x"])==Float64  # TODO remove redundant code
-      if isnan(n.ocp.XF_tol[1]); rg=1; else rg=n.ocp.XF_tol[1]; end
+      if isnan(c["goal"]["tol"]); rg = 1; else rg = c["goal"]["tol"]; end
       if !posterPlot || idx ==r.ocp.evalNum
         pts = Plots.partialcircle(0,2π,100,rg)
         x, y = Plots.unzip(pts)
         x += c["goal"]["x"];  y += c["g"]["y"]
         pts = collect(zip(x, y))
         if !smallMarkers  #TODO get ride of this-> will not be a legend for this case
-          scatter!((c["goal"]["x"],c["goal"]["yVal"]),marker=_pretty_defaults[:goal_marker],label="Goal")
+          scatter!((c["goal"]["x"],c["goal"]["yVal"]),marker=_pretty_defaults[:goal_marker][1],label="Goal Area")
         end
-        plot!(pts,line=_pretty_defaults[:goal_line],fill=_pretty_defaults[:goal_fill],leg=true,label="")
+        plot!(pts,line=_pretty_defaults[:goal_line],fill=_pretty_defaults[:goal_fill][1],leg=true,label="")
+
+        if isnan(n.ocp.XF_tol[1]); rg=1; else rg=n.ocp.XF_tol[1]; end
+        pts = Plots.partialcircle(0,2π,100,rg)
+        x, y = Plots.unzip(pts)
+        x += c["goal"]["x"];  y += c["goal"]["yVal"]
+        pts = collect(zip(x, y))
+        if !smallMarkers  #TODO get ride of this-> will not be a legend for this case
+          scatter!((c["goal"]["x"],c["goal"]["yVal"]),marker=_pretty_defaults[:goal_marker][2],label="Goal")
+        end
+        plot!(pts,line=_pretty_defaults[:goal_line],fill=_pretty_defaults[:goal_fill][2],leg=true,label="")
       end
     end
 
@@ -84,16 +94,27 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
 
     # plot the goal; assuming same in x and y
     if typeof(c["goal"]["x"])==Float64 # TODO remove redundant code
-      if isnan(n.ocp.XF_tol[1]); rg=1; else rg=n.ocp.XF_tol[1]; end
+      #if isnan(n.ocp.XF_tol[1]); rg=1; else rg=n.ocp.XF_tol[1]; end
+      if isnan(c["goal"]["tol"]); rg = 1; else rg = c["goal"]["tol"]; end
       if !posterPlot || idx ==r.ocp.evalNum
         pts = Plots.partialcircle(0,2π,100,rg)
         x, y = Plots.unzip(pts)
         x += c["goal"]["x"];  y += c["goal"]["yVal"]
         pts = collect(zip(x, y))
         if !smallMarkers  #TODO get ride of this-> will not be a legend for this case
-          scatter!((c["goal"]["x"],c["goal"]["yVal"]),marker=_pretty_defaults[:goal_marker],label="Goal")
+          scatter!((c["goal"]["x"],c["goal"]["yVal"]),marker=_pretty_defaults[:goal_marker][1],label="Goal Area")
         end
-        plot!(pts,line=_pretty_defaults[:goal_line],fill=_pretty_defaults[:goal_fill],leg=true,label="")
+        plot!(pts,line=_pretty_defaults[:goal_line],fill=_pretty_defaults[:goal_fill][1],leg=true,label="")
+
+        if isnan(n.ocp.XF_tol[1]); rg=1; else rg=n.ocp.XF_tol[1]; end
+        pts = Plots.partialcircle(0,2π,100,rg)
+        x, y = Plots.unzip(pts)
+        x += c["goal"]["x"];  y += c["goal"]["yVal"]
+        pts = collect(zip(x, y))
+        if !smallMarkers  #TODO get ride of this-> will not be a legend for this case
+          scatter!((c["goal"]["x"],c["goal"]["yVal"]),marker=_pretty_defaults[:goal_marker][2],label="Goal")
+        end
+        plot!(pts,line=_pretty_defaults[:goal_line],fill=_pretty_defaults[:goal_fill][2],leg=true,label="")
       end
     end
 
@@ -300,7 +321,7 @@ function vtPlot(n,idx::Int64)
     end
     plot!(r.ocp.dfs[idx][:t],@FZ_RL(),line=_pretty_defaults[:mpc_lines][1],label="RL-mpc");
     plot!(r.ocp.dfs[idx][:t],@FZ_RR(),line=_pretty_defaults[:mpc_lines][2],label="RR-mpc");
-    plot!(r.ocp.dfs[idx][:t],@FZ_FL(),line=_pretty_defaults[:mpc_lines][3],label="FL-mpc");
+    plot!(r.ocp.dfs[idx][:t],@FZ_FL(),line=_pretty_defaults[:mpc_lines][7],label="FL-mpc");
     plot!(r.ocp.dfs[idx][:t],@FZ_FR(),line=_pretty_defaults[:mpc_lines][4],label="FR-mpc");
   end
   if _pretty_defaults[:plant]
@@ -403,7 +424,7 @@ function axLimsPlot(n,pa,idx::Int64,args...;kwargs...)
     plot!(r.ocp.dfs[idx][:t],@Ax_min(),line=_pretty_defaults[:limit_lines][1],label="min-mpc")
   end
   if _pretty_defaults[:plant]
-    temp = [r.ip.dfsplant[jj][:ux] for jj in 1:idx]; # ux
+    temp = [r.ip.dfsplant[jj][:ux] for jj in 1:idx] # ux
     U = [idx for tempM in temp for idx=tempM]
 
     # time
@@ -506,8 +527,7 @@ function lidarPlot(r,c,idx,args...;kwargs...)
 end
 """
 # to plot the second solution
-pp=posPlot(n,c,2)
-pp=posPlot(n,c,idx)
+pp = posPlot(n,c,2)
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/28/2017, Last Modified: 5/1/2017 \n
@@ -544,9 +564,9 @@ function posPlot(n,c,idx;kwargs...)
     return pp
   end
 
-  pp=statePlot(n,idx,1,2,pp;(:lims=>false),(:append=>true)); # vehicle trajectory
-  pp=obstaclePlot(n,c,idx,pp;(:append=>true),(:smallMarkers=>smallMarkers),(:obstacleMiss=>obstacleMiss));               # obstacles
-  pp=vehiclePlot(n,c,idx,pp;(:append=>true),(:zoom=>zoom),(:setLims=>setLims),(:smallMarkers=>smallMarkers));  # vehicle
+  pp = obstaclePlot(n,c,idx,pp;(:append=>true),(:smallMarkers=>smallMarkers),(:obstacleMiss=>obstacleMiss))   # obstacles
+  pp = statePlot(n,idx,1,2,pp;(:lims=>false),(:append=>true)) # vehicle trajectory
+  pp = vehiclePlot(n,c,idx,pp;(:append=>true),(:zoom=>zoom),(:setLims=>setLims),(:smallMarkers=>smallMarkers))# vehicle
 
   if !_pretty_defaults[:simulate] savefig(string(r.resultsDir,"pp.",_pretty_defaults[:format])) end
   return pp

@@ -25,8 +25,8 @@ const _pretty_defaults = Dict(
     # for VehicleModel.jl
     :vehicle_marker  =>(:black,:rect,5.0,1.0),
     :vehicle_fill    =>(0,1,:black),
-    :goal_marker     =>(:circle,:springgreen,10.0,1.0),
-    :goal_fill       =>(0,1,:springgreen),
+    :goal_marker     =>[(:circle,:springgreen,10.0,1.0),(:circle,:green,10.0,1.0)],
+    :goal_fill       =>[(0,1,:springgreen),(0,1,:green)],
     :goal_line       =>(1.0,0.0,:solid,:green),
     :obstacle_marker =>(:circle,:red,10.0,1.0),
     :obstacle_fill   =>(0,1.0,:red),
