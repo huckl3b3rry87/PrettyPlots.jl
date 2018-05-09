@@ -3,24 +3,24 @@
 obstaclePlot(n,c)
 
 # to run it after a single optimization
-pp=obstaclePlot(n,c,1);
+pp = obstaclePlot(n,c,1)
 
 # to create a new plot
-pp=obstaclePlot(n,c,idx);
+pp = obstaclePlot(n,c,idx)
 
 # to add to an exsting position plot
-pp=obstaclePlot(n,c,idx,pp;(:append=>true));
+pp = obstaclePlot(n,c,idx,pp;(:append=>true))
 
 # posterPlot
-pp=obstaclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true)); # add obstacles
+pp = obstaclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true)) # add obstacles
 --------------------------------------------------------------------------------------\n
 Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 3/11/2017, Last Modified: 7/5/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function obstaclePlot(n,c,idx,args...;kwargs...)
-  r=n.r;
-  kw = Dict(kwargs);
+  r = n.r
+  kw = Dict(kwargs)
 
   # check to see if is a basic plot
   if !haskey(kw,:basic); basic=false;
@@ -287,9 +287,9 @@ function vtPlot(n,idx::Int64)
     elseif isequal(c["misc"]["model"],:ThreeDOFv1) # constain speed (the model is not optimizing speed)
       V=r.ocp.dfs[idx][:v];R=r.ocp.dfs[idx][:r];SA=r.ocp.dfs[idx][:sa];
       U=c["misc"]["ux"]*ones(length(V)); Ax=zeros(length(V));
-    elseif isequal(c["misc"]["model"],:KinematicBicycle)
-      Vtotal = r.ocp.dfs[idx][:u]
-      Atotal = r.ocp.dfs[idx][:a]
+    elseif isequal(c["misc"]["model"],:KinematicBicycle2)
+      Vtotal = r.ocp.dfs[idx][:ux]
+      Atotal = r.ocp.dfs[idx][:ax]
       SA = r.ocp.dfs[idx][:sa]
       Beta = atan.(la/(la+lb)*tan.(SA))
       V = Vtotal.*sin.(Beta)
@@ -327,11 +327,11 @@ function vtPlot(n,idx::Int64)
 
       temp = [r.ip.dfsplant[jj][:sa] for jj in 1:idx]; # sa
       SA=[idx for tempM in temp for idx=tempM];
-    elseif isequal(c["misc"]["model"],:KinematicBicycle)
-      temp = [r.ip.dfsplant[jj][:u] for jj in 1:idx]; # u
+    elseif isequal(c["misc"]["model"],:KinematicBicycle2)
+      temp = [r.ip.dfsplant[jj][:ux] for jj in 1:idx]; # u
       Vtotal=[idx for tempM in temp for idx=tempM];
 
-      temp = [r.ip.dfsplant[jj][:a] for jj in 1:idx]; # a
+      temp = [r.ip.dfsplant[jj][:ax] for jj in 1:idx]; # a
       Atotal=[idx for tempM in temp for idx=tempM];
 
       temp = [r.ip.dfsplant[jj][:sa] for jj in 1:idx]; # sa
@@ -594,16 +594,29 @@ function mainPlot(n,c,idx;kwargs...)
                 b{0.2h}] [c;d;e]])
     mainS=plot(pz,pp,vt,sap,tp,layout=l,size=_pretty_defaults[:size]);
   elseif mode==:open1
-    sap=statePlot(n,idx,6);plot!(leg=:topleft)
-    longv=statePlot(n,idx,7);plot!(leg=:topleft)
-    axp=axLimsPlot(n,pa,idx);# add nonlinear acceleration limits
-    axp=statePlot(n,idx,8,axp;(:lims=>false),(:append=>true));plot!(leg=:bottomright);
-    pp=posPlot(n,c,idx;(:setLims=>true));plot!(leg=:topright);
-    if _pretty_defaults[:plant]; tp=tPlot(n,idx); else; tp=plot(0,leg=:false); end
-    vt=vtPlot(n,idx)
-    l = @layout [a{0.5w} [grid(2,2)
-                          b{0.2h}]]
-    mainS=plot(pp,sap,vt,longv,axp,tp,layout=l,size=_pretty_defaults[:size]);
+    if isequal(c["misc"]["model"],:ThreeDOFv2)
+      sap=statePlot(n,idx,6);plot!(leg=:topleft)
+      longv=statePlot(n,idx,7);plot!(leg=:topleft)
+      axp=axLimsPlot(n,pa,idx);# add nonlinear acceleration limits
+      axp=statePlot(n,idx,8,axp;(:lims=>false),(:append=>true));plot!(leg=:bottomright);
+      pp=posPlot(n,c,idx;(:setLims=>true));plot!(leg=:topright);
+      if _pretty_defaults[:plant]; tp=tPlot(n,idx); else; tp=plot(0,leg=:false); end
+      vt=vtPlot(n,idx)
+      l = @layout [a{0.5w} [grid(2,2)
+                            b{0.2h}]]
+      mainS=plot(pp,sap,vt,longv,axp,tp,layout=l,size=_pretty_defaults[:size]);
+    elseif isequal(c["misc"]["model"],:KinematicBicycle2)
+      sap=controlPlot(n,idx,1);plot!(leg=:topleft)
+      longv=statePlot(n,idx,4);plot!(leg=:topleft)
+      axp=controlPlot(n,idx,2);plot!(leg=:bottomright);
+      pp=posPlot(n,c,idx;(:setLims=>true));plot!(leg=:topright);
+      if _pretty_defaults[:plant]; tp=tPlot(n,idx); else; tp=plot(0,leg=:false); end
+      vt=vtPlot(n,idx)
+      l = @layout [a{0.5w} [grid(2,2)
+                            b{0.2h}]]
+      mainS=plot(pp,sap,vt,longv,axp,tp,layout=l,size=_pretty_defaults[:size]);
+    end
+
   end
 
   return mainS
@@ -723,11 +736,16 @@ function posterP(n,c)
   # static plots for each frame
   idx = length(n.r.ocp.dfs)
   idxT = length(n.r.ocp.dfsOpt[:tSolve])
-
-  sap=statePlot(n,idx,6)
-  longv=statePlot(n,idx,7)
-  axp=axLimsPlot(n,pa,idx); # add nonlinear acceleration limits
-  axp=statePlot(n,idx,8,axp;(:lims=>false),(:append=>true));
+  if isequal(c["misc"]["model"],:ThreeDOFv2)
+    sap=statePlot(n,idx,6)
+    longv=statePlot(n,idx,7)
+    axp=axLimsPlot(n,pa,idx); # add nonlinear acceleration limits
+    axp=statePlot(n,idx,8,axp;(:lims=>false),(:append=>true));
+  elseif isequal(c["misc"]["model"],:KinematicBicycle2)
+    sap=controlPlot(n,idx,1);plot!(leg=:topleft)
+    longv=statePlot(n,idx,4);plot!(leg=:topleft)
+    axp=controlPlot(n,idx,2);plot!(leg=:bottomright);
+  end
   pp=statePlot(n,idx,1,2;(:lims=>false));
   if _pretty_defaults[:plant]; tp=tPlot(n,idx); else; tp=plot(0,leg=:false); end
   vt=vtPlot(n,idx)
