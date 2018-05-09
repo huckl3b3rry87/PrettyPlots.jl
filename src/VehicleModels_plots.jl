@@ -300,6 +300,8 @@ function vtPlot(n,idx::Int64)
     end
     plot!(r.ocp.dfs[idx][:t],@FZ_RL(),line=_pretty_defaults[:mpc_lines][1],label="RL-mpc");
     plot!(r.ocp.dfs[idx][:t],@FZ_RR(),line=_pretty_defaults[:mpc_lines][2],label="RR-mpc");
+    plot!(r.ocp.dfs[idx][:t],@FZ_FL(),line=_pretty_defaults[:mpc_lines][3],label="FL-mpc");
+    plot!(r.ocp.dfs[idx][:t],@FZ_FR(),line=_pretty_defaults[:mpc_lines][4],label="FR-mpc");
   end
   if _pretty_defaults[:plant]
 
@@ -351,6 +353,8 @@ function vtPlot(n,idx::Int64)
 
     plot!(time,@FZ_RL(),line=_pretty_defaults[:plant_lines][1],label="RL-plant")
     plot!(time,@FZ_RR(),line=_pretty_defaults[:plant_lines][2],label="RR-plant")
+    plot!(time,@FZ_FL(),line=_pretty_defaults[:plant_lines][3],label="FL-plant")
+    plot!(time,@FZ_FR(),line=_pretty_defaults[:plant_lines][4],label="FR-plant")
   end
   plot!(size=_pretty_defaults[:size])
 	adjust_axis(xlims(),ylims())
@@ -725,8 +729,8 @@ Date Create: 4/13/2017, Last Modified: 6/22/2017 \n
 """
 
 function posterP(n,c)
-  r=n.r;
-  pa=n.ocp.params[1];
+  r = n.r
+  pa = n.ocp.params[1]
   if n.r.ocp.status==:Infeasible
     warn("\n Current solution is infeasible! Will try to plot, but it may fail... \n")
   end
@@ -737,44 +741,44 @@ function posterP(n,c)
   idx = length(n.r.ocp.dfs)
   idxT = length(n.r.ocp.dfsOpt[:tSolve])
   if isequal(c["misc"]["model"],:ThreeDOFv2)
-    sap=statePlot(n,idx,6)
-    longv=statePlot(n,idx,7)
-    axp=axLimsPlot(n,pa,idx); # add nonlinear acceleration limits
-    axp=statePlot(n,idx,8,axp;(:lims=>false),(:append=>true));
+    sap = statePlot(n,idx,6)
+    longv = statePlot(n,idx,7)
+    axp = axLimsPlot(n,pa,idx); # add nonlinear acceleration limits
+    axp = statePlot(n,idx,8,axp;(:lims=>false),(:append=>true))
   elseif isequal(c["misc"]["model"],:KinematicBicycle2)
-    sap=controlPlot(n,idx,1);plot!(leg=:topleft)
-    longv=statePlot(n,idx,4);plot!(leg=:topleft)
-    axp=controlPlot(n,idx,2);plot!(leg=:bottomright);
+    sap = controlPlot(n,idx,1);plot!(leg=:topleft)
+    longv = statePlot(n,idx,4);plot!(leg=:topleft)
+    axp = controlPlot(n,idx,2);plot!(leg=:bottomright)
   end
-  pp=statePlot(n,idx,1,2;(:lims=>false));
+  pp = statePlot(n,idx,1,2;(:lims=>false))
   if _pretty_defaults[:plant]; tp=tPlot(n,idx); else; tp=plot(0,leg=:false); end
-  vt=vtPlot(n,idx)
+  vt = vtPlot(n,idx)
 
   # dynamic plots ( maybe only update every 5 frames or so)
-  v=Vector(1:5:r.ocp.evalNum); if v[end]!=r.ocp.evalNum; append!(v,r.ocp.evalNum); end
+  v = Vector(1:5:r.ocp.evalNum); if v[end]!=r.ocp.evalNum; append!(v,r.ocp.evalNum); end
   for ii in v
     if ii==1
-      st1=1;st2=2;
+      st1 = 1;st2 = 2;
       # values
-  		temp = [r.ip.dfsplant[jj][n.ocp.state.name[st1]] for jj in 1:r.ocp.evalNum];
-  		vals1=[idx for tempM in temp for idx=tempM];
+  		temp = [r.ip.dfsplant[jj][n.ocp.state.name[st1]] for jj in 1:r.ocp.evalNum]
+  		vals1 = [idx for tempM in temp for idx=tempM]
 
   		# values
-  		temp = [r.ip.dfsplant[jj][n.ocp.state.name[st2]] for jj in 1:r.ocp.evalNum];
-  		vals2=[idx for tempM in temp for idx=tempM];
+  		temp = [r.ip.dfsplant[jj][n.ocp.state.name[st2]] for jj in 1:r.ocp.evalNum]
+  		vals2 = [idx for tempM in temp for idx=tempM]
 
-  		pp=plot(vals1,vals2,line=_pretty_defaults[:plant_lines][1],label="Vehicle Trajectory");
+  		pp = plot(vals1,vals2,line=_pretty_defaults[:plant_lines][1],label="Vehicle Trajectory")
 
-      pp=obstaclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true)); # add obstacles
-      pp=vehiclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add the vehicle
+      pp = obstaclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true)) # add obstacles
+      pp = vehiclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true))  # add the vehicle
     else
-      pp=obstaclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add obstacles
-      pp=vehiclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true));  # add the vehicle
+      pp = obstaclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true))  # add obstacles
+      pp = vehiclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true))  # add the vehicle
     end
   end
   l = @layout [a{0.5w} [grid(2,2)
                         b{0.2h}]]
-  poster=plot(pp,sap,vt,longv,axp,tp,layout=l,size=_pretty_defaults[:size]);
-  savefig(string(r.resultsDir,"poster",".",_pretty_defaults[:format]));
+  poster = plot(pp,sap,vt,longv,axp,tp,layout=l,size=_pretty_defaults[:size])
+  savefig(string(r.resultsDir,"poster",".",_pretty_defaults[:format]))
   return nothing
 end

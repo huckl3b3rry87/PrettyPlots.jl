@@ -18,7 +18,7 @@ const _pretty_defaults = Dict(
                      (2.7,:gold,:dash),(2.7,:greenyellow,:dash),(2.7,:hotpink,:dash),
                      (2.7,:steelblue,:dash),(2.7,:aqua,:dash),(2.7,:teal,:dash)],
     :mpc_markers  =>(:circle,:blueviolet,0.0,1.0),
-    :plant_lines  =>[(4.3,:darkgreen,:solid),(4.3,:darkgreen,:dash)],
+    :plant_lines  =>[(4.3,:darkgreen,:solid),(4.3,:darkgreen,:dash),(4.3,:black,:solid),(4.3,:black,:dash)],
     :limit_lines  =>[(2.0,:deeppink1,:solid),(2.0,:deeppink1,:dash),(2.0,:blueviolet,:solid),(2.0,:blueviolet,:dash)],
     :opt_marker  => [(:circle,:green,3.0),(:rect,:red,3.0),(:circle,:black,3.0)],
 
