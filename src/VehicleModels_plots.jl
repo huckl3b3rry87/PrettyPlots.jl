@@ -57,7 +57,7 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
         end
         plot!(pts,line=_pretty_defaults[:goal_line],fill=_pretty_defaults[:goal_fill][1],leg=true,label="")
 
-        if isnan(n.ocp.XF_tol[1]); rg=1; else rg=n.ocp.XF_tol[1]; end
+        if isnan(c["tolerances"]["fx"]); rg = 1; else rg = c["tolerances"]["fx"]; end
         pts = Plots.partialcircle(0,2π,100,rg)
         x, y = Plots.unzip(pts)
         x += c["goal"]["x"];  y += c["goal"]["yVal"]
@@ -94,7 +94,6 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
 
     # plot the goal; assuming same in x and y
     if typeof(c["goal"]["x"])==Float64 # TODO remove redundant code
-      #if isnan(n.ocp.XF_tol[1]); rg=1; else rg=n.ocp.XF_tol[1]; end
       if isnan(c["goal"]["tol"]); rg = 1; else rg = c["goal"]["tol"]; end
       if !posterPlot || idx ==r.ocp.evalNum
         pts = Plots.partialcircle(0,2π,100,rg)
@@ -106,7 +105,7 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
         end
         plot!(pts,line=_pretty_defaults[:goal_line],fill=_pretty_defaults[:goal_fill][1],leg=true,label="")
 
-        if isnan(n.ocp.XF_tol[1]); rg=1; else rg=n.ocp.XF_tol[1]; end
+        if isnan(c["tolerances"]["fx"]); rg=1; else rg = c["tolerances"]["fx"]; end
         pts = Plots.partialcircle(0,2π,100,rg)
         x, y = Plots.unzip(pts)
         x += c["goal"]["x"];  y += c["goal"]["yVal"]
