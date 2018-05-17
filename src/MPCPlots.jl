@@ -43,8 +43,8 @@ function tPlot(n,idx::Int64,args...;kwargs...);
 
   if idx > length(r.dfsOpt[:tSolve])
       warn("Cannot plot idx = ", idx, " because length(r.dfsOpt[:tSolve]) = ", length(r.dfsOpt[:tSolve]), ". \n
-            Skipping idx in tPlot!().")
-      return tp
+            reducing idx in tPlot!().")
+      idx = length(r.dfsOpt[:tSolve])
   end
 
   # check to see if user would like to label legend

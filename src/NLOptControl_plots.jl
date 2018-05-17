@@ -65,12 +65,6 @@ function statePlot(n,idx::Int64,st::Int64,args...;kwargs...)
   end
   if !append; stp=plot(0,leg=:false); else stp=args[1]; end
 
-  if idx > length(n.r.ocp.dfs)
-    warn("Cannot plot idx = ", idx, " because length(n.r.ocp.dfs) = ", length(n.r.ocp.dfs), ". \n
-          Skipping idx in statePlot().")
-    return stp
-  end
-
   # check to see if user would like to plot limits
   if !haskey(kw,:lims); lims=true;
   else; lims=get(kw,:lims,0);
@@ -81,10 +75,17 @@ function statePlot(n,idx::Int64,st::Int64,args...;kwargs...)
   else; legend_string = get(kw,:legend,0);
   end
 
-	if n.r.ocp.dfs[idx]!=nothing
-  	t_vec=linspace(0.0,n.r.ocp.dfs[end][:t][end],_pretty_defaults[:L]);
+  # check length of n.r.ocp.dfs to see if there is data for the provided idx
+  if length(n.r.ocp.dfs) >= idx
+    ocpPlot = true
+  else
+    ocpPlot = false
+  end
+
+	if ocpPlot
+  	t_vec = linspace(0.0,n.r.ocp.dfs[end][:t][end],_pretty_defaults[:L])
 	else
-		t_vec=linspace(0.0,n.r.ip.dfsplant[end][:t][end],_pretty_defaults[:L]);
+		t_vec = linspace(0.0,n.r.ip.dfsplant[end][:t][end],_pretty_defaults[:L])
 	end
 
   if lims
@@ -104,7 +105,7 @@ function statePlot(n,idx::Int64,st::Int64,args...;kwargs...)
   end
 
   # plot the values TODO if there are no lims then you cannot really see the signal
-	if n.r.ocp.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
+	if !_pretty_defaults[:plantOnly] && ocpPlot
     if n.s.ocp.integrationMethod == :ps && _pretty_defaults[:polyPts] && isequal(n.r.ocp.dfsOpt[:status][idx],:Optimal) && !n.s.ocp.linearInterpolation && n.s.ocp.interpolationOn
       int_color = 1
       for int in 1:n.ocp.Ni
@@ -163,10 +164,17 @@ function statePlot(n,idx::Int64,st1::Int64,st2::Int64,args...;kwargs...)
   end
   if !append; stp=plot(0,leg=:false); else stp=args[1]; end
 
-  if idx > length(n.r.ocp.dfs)
-    warn("Cannot plot idx = ", idx, " because length(n.r.ocp.dfs) = ", length(n.r.ocp.dfs), ". \n
-          Skipping idx in statePlot().")
-    return stp
+  #if idx > length(n.r.ocp.dfs)
+  #  warn("Cannot plot idx = ", idx, " because length(n.r.ocp.dfs) = ", length(n.r.ocp.dfs), ". \n
+  #        Skipping idx in statePlot().")
+  #  return stp
+  #end
+
+  # check length of n.r.ocp.dfs to see if there is data for the provided idx
+  if length(n.r.ocp.dfs) >= idx
+    ocpPlot = true
+  else
+    ocpPlot = false
   end
 
   # check to see if user would like to plot limits
@@ -190,7 +198,7 @@ function statePlot(n,idx::Int64,st1::Int64,st2::Int64,args...;kwargs...)
   end
 
   # plot the values
-	if n.r.ocp.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
+	if !_pretty_defaults[:plantOnly] && ocpPlot
 		plot!(n.r.ocp.dfs[idx][n.ocp.state.name[st1]],n.r.ocp.dfs[idx][n.ocp.state.name[st2]],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"));
 	end
 
@@ -232,10 +240,16 @@ function controlPlot(n,idx::Int64,ctr::Int64,args...;kwargs...)
   end
   if !append; ctrp=plot(0,leg=:false); else ctrp=args[1]; end
 
-  if idx > length(n.r.ocp.dfs)
-    warn("Cannot plot idx = ", idx, " because length(n.r.ocp.dfs) = ", length(n.r.ocp.dfs), ". \n
-          Skipping idx in controlPlot().")
-    return ctrp
+  #if idx > length(n.r.ocp.dfs)
+  #  warn("Cannot plot idx = ", idx, " because length(n.r.ocp.dfs) = ", length(n.r.ocp.dfs), ". \n
+  #        Skipping idx in controlPlot().")
+  #  return ctrp
+  #end
+  # check length of n.r.ocp.dfs to see if there is data for the provided idx
+  if length(n.r.ocp.dfs) >= idx
+    ocpPlot = true
+  else
+    ocpPlot = false
   end
 
   # check to see if user would like to plot limits
@@ -248,7 +262,7 @@ function controlPlot(n,idx::Int64,ctr::Int64,args...;kwargs...)
   else; legend_string = get(kw,:legend,0)
   end
 
-  if n.r.ocp.dfs[idx]!=nothing
+  if ocpPlot
   	t_vec = linspace(0.0,n.r.ocp.dfs[end][:t][end],_pretty_defaults[:L])
 	else
 		t_vec = linspace(0.0,n.r.ip.dfsplant[end][:t][end],_pretty_defaults[:L])
@@ -260,7 +274,7 @@ function controlPlot(n,idx::Int64,ctr::Int64,args...;kwargs...)
     if !isnan(n.ocp.CL[ctr]); plot!(t_vec,n.ocp.CL[ctr]*ones(_pretty_defaults[:L],1),line=_pretty_defaults[:limit_lines][1],label="min"); end
   end
 
-  if n.r.ocp.dfs[idx]!=nothing  && !_pretty_defaults[:plantOnly]
+  if !_pretty_defaults[:plantOnly] && ocpPlot
     if n.s.ocp.integrationMethod == :ps && _pretty_defaults[:polyPts] && isequal(n.r.ocp.dfsOpt[:status][idx],:Optimal) && !n.s.ocp.linearInterpolation && n.s.ocp.interpolationOn
       int_color = 1
       for int in 1:n.ocp.Ni
@@ -339,13 +353,18 @@ function costatePlot(n,idx::Int64,st::Int64;kwargs...)
   end
   if !append; csp=plot(0,leg=:false); else csp=args[1]; end
 
+  if length(n.r.ocp.dfs) >= idx
+    ocpPlot = true
+  else
+    ocpPlot = false
+  end
 
   # check to see if user would like to label legend
   if !haskey(kw,:legend); legend_string = "";
   else; legend_string = get(kw,:legend,0);
   end
 
-	if n.r.ocp.dfs[idx]!=nothing
+	if ocpPlot
   	t_vec=linspace(0.0,n.r.ocp.dfs[end][:t][end],_pretty_defaults[:L]);
 	else
 		t_vec=linspace(0.0,n.r.ip.dfsplant[end][:t][end],_pretty_defaults[:L]);

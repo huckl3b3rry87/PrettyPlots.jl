@@ -284,14 +284,21 @@ function vtPlot(n,idx::Int64)
 
 	@unpack_Vpara pa
 
-  if idx > length(n.r.ocp.dfs)
-    warn("Cannot plot idx = ", idx, " because length(n.r.ocp.dfs) = ", length(n.r.ocp.dfs), ". \n
-          Skipping idx in vtPlot().")
-    vt = plot(0,leg=:false)
-    return vt
+  # check length of n.r.ocp.dfs to see if there is data for the provided idx
+  if length(n.r.ocp.dfs) >= idx
+    ocpPlot = true
+  else
+    ocpPlot = false
   end
 
-  if r.ocp.dfs[idx]!=nothing
+#  if idx > length(n.r.ocp.dfs)
+#    warn("Cannot plot idx = ", idx, " because length(n.r.ocp.dfs) = ", length(n.r.ocp.dfs), ". \n
+#          Skipping idx in vtPlot().")
+#    vt = plot(0,leg=:false)
+#    return vt
+#  end
+
+  if ocpPlot
     t_vec=linspace(0.0,max(5,ceil(r.ocp.dfs[end][:t][end]/1)*1),_pretty_defaults[:L]);
   else
     t_vec=linspace(0.0,max(5,ceil(r.ip.dfsplant[end][:t][end]/1)*1),_pretty_defaults[:L]);
@@ -299,7 +306,7 @@ function vtPlot(n,idx::Int64)
 
 	vt=plot(t_vec,c["vehicle"][:Fz_off]*ones(_pretty_defaults[:L],1),line=_pretty_defaults[:limit_lines][2],label="min")
 
-  if r.ocp.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
+  if !_pretty_defaults[:plantOnly] && ocpPlot
 
     if  isequal(c["misc"]["model"],:ThreeDOFv2)
       V=r.ocp.dfs[idx][:v];R=r.ocp.dfs[idx][:r];SA=r.ocp.dfs[idx][:sa];
@@ -403,21 +410,22 @@ function axLimsPlot(n,pa,idx::Int64,args...;kwargs...)
   end
   if !append; axp=plot(0,leg=:false); else axp=args[1]; end
 
-  if idx > length(n.r.ocp.dfs)
-    warn("Cannot plot idx = ", idx, " because length(n.r.ocp.dfs) = ", length(n.r.ocp.dfs), ". \n
-          Skipping idx in axLimsPlot().")
-    return axp
+  # check length of n.r.ocp.dfs to see if there is data for the provided idx
+  if length(n.r.ocp.dfs) >= idx
+    ocpPlot = true
+  else
+    ocpPlot = false
   end
 
   @unpack_Vpara pa
 
-  if !_pretty_defaults[:plant] && r.ocp.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
+  if !_pretty_defaults[:plant] &&  !_pretty_defaults[:plantOnly] && ocpPlot
     t_vec = linspace(0.0,max(5,ceil(r.ocp.dfs[end][:t][end]/1)*1),_pretty_defaults[:L])
   else
     t_vec = linspace(0,max(5,ceil(r.ip.dfsplant[end][:t][end]/1)*1),_pretty_defaults[:L])
   end
 
-  if r.ocp.dfs[idx]!=nothing && !_pretty_defaults[:plantOnly]
+  if !_pretty_defaults[:plantOnly] && ocpPlot
     U = r.ocp.dfs[idx][:ux]
     plot!(r.ocp.dfs[idx][:t],@Ax_max(),line=_pretty_defaults[:limit_lines][2],label="max-mpc")
     plot!(r.ocp.dfs[idx][:t],@Ax_min(),line=_pretty_defaults[:limit_lines][1],label="min-mpc")
@@ -557,11 +565,11 @@ function posPlot(n,c,idx;kwargs...)
   if haskey(c,"track"); pp=trackPlot(c;(:smallMarkers=>smallMarkers)); else pp=plot(0,leg=:false); end  # track
   if haskey(c["misc"],"Lr"); pp=lidarPlot(r,c,idx,pp;(:append=>true)); end  # lidar
 
-  if idx > length(n.r.ocp.dfs)
-    warn("Cannot plot idx = ", idx, " because length(n.r.ocp.dfs) = ", length(n.r.ocp.dfs), ". \n
-          Skipping idx in posPlot().")
-    return pp
-  end
+#  if idx > length(n.r.ocp.dfs)
+#    warn("Cannot plot idx = ", idx, " because length(n.r.ocp.dfs) = ", length(n.r.ocp.dfs), ". \n
+#          Skipping idx in posPlot().")
+#    return pp
+#  end
 
   pp = obstaclePlot(n,c,idx,pp;(:append=>true),(:smallMarkers=>smallMarkers),(:obstacleMiss=>obstacleMiss))   # obstacles
   pp = statePlot(n,idx,1,2,pp;(:lims=>false),(:append=>true)) # vehicle trajectory
@@ -679,11 +687,11 @@ function mainSim(n,c;kwargs...)
         num = length(n.r.ip.dfsplant)
       end
 
-      if num > length(r.ocp.dfs)
-        warn("Cannot plot idx = ", num, " because length(r.ocp.dfs) = ", length(r.ocp.dfs), "\n
-              skipping num in mainSim().")
-          num = length(r.ocp.dfs)
-      end
+      #if num > length(r.ocp.dfs)
+      #  warn("Cannot plot idx = ", num, " because length(r.ocp.dfs) = ", length(r.ocp.dfs), "\n
+      #        skipping num in mainSim().")
+      #    num = length(r.ocp.dfs)
+      #end
 
      anim = @animate for idx in 1:num
        mainPlot(n,c,idx;(:mode=>mode))
