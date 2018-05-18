@@ -47,7 +47,7 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
 
     if typeof(c["goal"]["x"])==Float64  # TODO remove redundant code
       if isnan(c["goal"]["tol"]); rg = 1; else rg = c["goal"]["tol"]; end
-      if !posterPlot || idx ==r.ocp.evalNum
+      if !posterPlot || idx == r.ocp.evalNum
         pts = Plots.partialcircle(0,2π,100,rg)
         x, y = Plots.unzip(pts)
         x += c["goal"]["x"];  y += c["g"]["y"]
@@ -565,12 +565,6 @@ function posPlot(n,c,idx;kwargs...)
   if haskey(c,"track"); pp=trackPlot(c;(:smallMarkers=>smallMarkers)); else pp=plot(0,leg=:false); end  # track
   if haskey(c["misc"],"Lr"); pp=lidarPlot(r,c,idx,pp;(:append=>true)); end  # lidar
 
-#  if idx > length(n.r.ocp.dfs)
-#    warn("Cannot plot idx = ", idx, " because length(n.r.ocp.dfs) = ", length(n.r.ocp.dfs), ". \n
-#          Skipping idx in posPlot().")
-#    return pp
-#  end
-
   pp = obstaclePlot(n,c,idx,pp;(:append=>true),(:smallMarkers=>smallMarkers),(:obstacleMiss=>obstacleMiss))   # obstacles
   pp = statePlot(n,idx,1,2,pp;(:lims=>false),(:append=>true)) # vehicle trajectory
   pp = vehiclePlot(n,c,idx,pp;(:append=>true),(:zoom=>zoom),(:setLims=>setLims),(:smallMarkers=>smallMarkers))# vehicle
@@ -794,9 +788,10 @@ function posterP(n,c)
   		temp = [r.ip.dfsplant[jj][n.ocp.state.name[st2]] for jj in 1:r.ocp.evalNum]
   		vals2 = [idx for tempM in temp for idx=tempM]
 
-  		pp = plot(vals1,vals2,line=_pretty_defaults[:plant_lines][1],label="Vehicle Trajectory")
-
-      pp = obstaclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true)) # add obstacles
+      pp = obstaclePlot(n,c,ii;(:append=>false),(:posterPlot=>true)) # add obstacles
+  		plot!(vals1,vals2,line=_pretty_defaults[:plant_lines][1],label="Vehicle Trajectory")
+      #pp = plot(vals1,vals2,line=_pretty_defaults[:plant_lines][1],label="Vehicle Trajectory")
+      #pp = obstaclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true)) # add obstacles
       pp = vehiclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true))  # add the vehicle
     else
       pp = obstaclePlot(n,c,ii,pp;(:append=>true),(:posterPlot=>true))  # add obstacles
