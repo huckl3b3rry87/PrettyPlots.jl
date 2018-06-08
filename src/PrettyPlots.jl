@@ -44,7 +44,8 @@ export
     posterP,
     posPlot,
     vtPlot,
-
+    pSimGR,
+    axLimsPlot,
 
     # Plots.jl exported functions
     xlims!,

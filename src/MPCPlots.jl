@@ -4,7 +4,7 @@ Author: Huckleberry Febbo, Graduate Student, University of Michigan
 Date Create: 04/26/2018 Last Modified: 04/26/2018 \n
 --------------------------------------------------------------------------------------\n
 """
-function mpcPlot(n;idx::Int64=1,kwargs...)
+function mpcPlot(n,idx,kwargs...)
   if !isdir(n.r.resultsDir); resultsDir!(n); end
   stp = [statePlot(n,idx,st;kwargs...) for st in 1:n.ocp.state.num]
   ctp = [controlPlot(n,idx,ctr;kwargs...) for ctr in 1:n.ocp.control.num]
@@ -84,12 +84,10 @@ Date Create: 7/04/2017, Last Modified: 7/04/2017 \n
 --------------------------------------------------------------------------------------\n
 """
 function optPlot(n)
-  L=length(n.r.ocp.dfsOpt[:tSolve])
+  L = length(n.r.ocp.dfsOpt[:tSolve])
   temp = [n.r.ocp.dfsOpt[:objVal][jj] for jj in 1:L]
   val = [idx for tempM in temp for idx=tempM]
-
   opt = plot(1:L,val)
-
   yaxis!("Objective Function Values")
 	xaxis!("Evaluation Number")
   savefig(string(n.r.resultsDir,"optPlot.",_pretty_defaults[:format]))
