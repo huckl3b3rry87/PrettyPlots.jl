@@ -10,9 +10,12 @@ notifications:
 addons:
       apt_packages:
         - gfortran
+        - python3-matplotlib
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia -e 'Pkg.clone(pwd())'
   - julia -e 'Pkg.add("Ipopt")'
   - julia -e 'Pkg.build("Ipopt")'
   - julia -e 'Pkg.test("PrettyPlots")'
+
+# sudo apt-get install python3-matplotlib
