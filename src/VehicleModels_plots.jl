@@ -50,7 +50,7 @@ function obstaclePlot(n,c,idx,args...;kwargs...)
       if !posterPlot || idx == r.ocp.evalNum
         pts = Plots.partialcircle(0,2π,100,rg)
         x, y = Plots.unzip(pts)
-        x += c["goal"]["x"];  y += c["g"]["y"]
+        x += c["goal"]["x"];  y += c["goal"]["yVal"]
         pts = collect(zip(x, y))
         if !smallMarkers  #TODO get ride of this-> will not be a legend for this case
           scatter!((c["goal"]["x"],c["goal"]["yVal"]),marker=_pretty_defaults[:goal_marker][1],label="Goal Area")
