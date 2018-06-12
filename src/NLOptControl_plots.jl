@@ -380,10 +380,10 @@ function costatePlot(n,idx::Int64,st::Int64;kwargs...)
         end
         plot!(n.r.ocp.AlltpolyPts[idx][int],n.r.ocp.AllCSpolyPts[idx][st][int],line=_pretty_defaults[:mpc_lines][int_color], label=string("poly. # ", int))
         int_color = int_color + 1
-        scatter!(t_st_int[int][1:end-1],n.r.CS[st][int],marker=_pretty_defaults[:mpc_markers],label=string(legend_string,"costate pts."))
+        scatter!(t_st_int[int][1:end-1],n.r.ocp.CS[st][int],marker=_pretty_defaults[:mpc_markers],label=string(legend_string,"costate pts."))
     end
   #else # NOTE for now :tm methods do not have a costate option
-  #  plot!(n.r.ocp.dfs[idx][:t],n.r.CS[st],marker=_pretty_defaults[:mpc_markers],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"))
+  #  plot!(n.r.ocp.dfs[idx][:t],n.r.ocp.CS[st],marker=_pretty_defaults[:mpc_markers],line=_pretty_defaults[:mpc_lines][1],label=string(legend_string,"mpc"))
   end
 
   adjust_axis(xlims(),ylims());
