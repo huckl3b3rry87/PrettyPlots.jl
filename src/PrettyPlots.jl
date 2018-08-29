@@ -6,8 +6,8 @@ using Plots
 #import Plots.gr
 #import Plots.pyplot
 import Plots.xlims!, Plots.ylims!, Plots.plot
-#gr(); # default backend
-pyplot()
+gr(); # default backend
+#pyplot()
 using VehicleModels # need for parameters
 using NLOptControl  # need for resultsDir!()
 
