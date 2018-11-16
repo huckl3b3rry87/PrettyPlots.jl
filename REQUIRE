@@ -3,5 +3,5 @@ Colors
 DataFrames 0.11
 Plots
 GR
-VehicleModels 0.1.4-
-NLOptControl 0.1.6-
+VehicleModels 0.1.4
+NLOptControl 0.1.6 0.1.6
